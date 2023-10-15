@@ -1,3 +1,5 @@
+[Donate $5](https://www.paypal.com/donate/?hosted_button_id=SEVR6RVFDB9SC)
+
 # CodKiller Game Engine Documentation (Alpha Version)
 Introduction
 CodKiller is a game engine designed to facilitate the development of 2D games with features such as map editing, rendering, and agent behavior. This documentation provides an overview of the engine's functionality and usage instructions for the alpha version.
