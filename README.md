@@ -1,4 +1,4 @@
-[Donate $5](https://www.paypal.com/donate/?hosted_button_id=SEVR6RVFDB9SC)
+[Donate $5 to create tokens for ChatGPT code work](https://www.paypal.com/donate/?hosted_button_id=SEVR6RVFDB9SC)
 
 # CodKiller Game Engine Documentation (Alpha Version)
 Introduction
