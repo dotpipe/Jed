@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>JSON Editor with ChatGPT 3.5</title>
+  <style>
+    #canvas {
+      border: 1px solid black;
+    }
+    #editor {
+      width: 400px;
+      height: 400px;
+      border: 1px solid black;
+      overflow: auto;
+    }
+    #textInput {
+      width: 300px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="editor"></div>
+  <input type="text" id="textInput" placeholder="Enter command...">
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/@openai/chatgpt"></script>
+  <script>
+    const editor = document.getElementById('editor');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const map = {
+      agents: [],
+      user: {},
+      walls: [],
+    };
+
+    // Initialize the JSON editor
+    const jsonEditor = new JSONEditor(editor, {
+      schema: {
+        type: 'object',
+        properties: {
+          agents: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                x: { type: 'number' },
+                y: { type: 'number' },
+                z: { type: 'number' },
+              },
+            },
+          },
+          user: {
+            type: 'object',
+            properties: {
+              x: { type: 'number' },
+              y: { type: 'number' },
+              z: { type: 'number' },
+            },
+          },
+          walls: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                startPoint: {
+                  type: 'object',
+                  properties: {
+                    x: { type: 'number' },
+                    y: { type: 'number' },
+                    z: { type: 'number' },
+                  },
+                },
+                endPoint: {
+                  type: 'object',
+                  properties: {
+                    x: { type: 'number' },
+                    y: { type: 'number' },
+                    z: { type: 'number' },
+                  },
+                },
+                height: { type: 'number' },
+                color: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      startval: map,
+      disable_edit_json: true,
+      disable_properties: true,
+      disable_collapse: true,
+    });
+
+    // Draw the map on the canvas
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (const agent of map.agents) {
+        ctx.fillStyle = 'green';
+        ctx.fillRect(agent.x, agent.y, 20, 40);
+      }
+
+      if (map.user) {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(map.user.x, map.user.y, 20, 40);
+      }
+
+      for (const wall of map.walls) {
+        ctx.fillStyle = wall.color;
+        ctx.fillRect(wall.startPoint.x, wall.startPoint.y, wall.endPoint.x - wall.startPoint.x, wall.endPoint.y - wall.startPoint.y);
+      }
+    }
+
+    // Update the map when the JSON data changes
+    jsonEditor.on('change', () => {
+      map = jsonEditor.getValue();
+      drawMap();
+    });
+
+    // Enable drag and drop functionality for the canvas
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    canvas.addEventListener('mousedown', (event) => {
+      isDragging = true;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+    });
+
+    canvas.addEventListener('mousemove', (event) => {
+      if (isDragging) {
+        const deltaX = event.clientX - dragStartX;
+        const deltaY = event.clientY - dragStartY;
+        dragStartX = event.clientX;
+        dragStartY = event.clientY;
+        canvas.style.left = `${canvas.offsetLeft + deltaX}px`;
+        canvas.style.top = `${canvas.offsetTop + deltaY}px`;
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    // Handle text input and execute commands using ChatGPT 3.5
+    const chatgpt = new OpenAIChatGPT({
+      model: 'gpt-3.5-turbo',
+      token: 'YOUR_OPENAI_API_KEY',
+    });
+
+    const textInput = document.getElementById('textInput');
+    textInput.addEventListener('keydown', async (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const userInput = textInput.value;
+        textInput.value = '';
+
+        // Send user input to ChatGPT 3.5 for processing
+        const response = await chatgpt.sendMessage(userInput);
+
+        // Process the response and execute commands
+        const command = response.choices[0].message.content.trim().toLowerCase();
+
+        if (command === 'create wall') {
+          const newWall = {
+            startPoint: { x: 0, y: 0, z: 0 },
+            endPoint: { x: 100, y: 100, z: 0 },
+            height: 50,
+            color: 'red',
+          };
+          map.walls.push(newWall);
+          drawMap();
+        } else if (command === 'drag vertex') {
+          // Implement vertex dragging logic here
+          // Update the wall coordinates based on the dragged vertex
+          // Redraw the map
+        } else {
+          // Handle other commands or provide appropriate response
+        }
+      }
+    });
+
+    // Initial draw of the map
+    drawMap();
+  </script>
+</body>
+</html>

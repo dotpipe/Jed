@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CodKiller Map Test</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script>
+    // Place the JavaScript code here
+    // ...
+
+    // Create a new map instance
+    const map = new Map('canvas');
+
+    // Add layers to the map
+    map.addLayer('green', 'black');
+
+    // Add walls to the layers
+    map.addWall(0, { x: 100, y: 100 }, { x: 300, y: 100 }, 50, 'blue');
+    map.addWall(0, { x: 100, y: 200 }, { x: 300, y: 200 }, 50, 'red');
+    map.addWall(0, { x: 200, y: 100 }, { x: 200, y: 200 }, 50, 'yellow');
+
+    // Draw the map
+    map.draw();
+  </script>
+</body>
+</html>
