@@ -4,10 +4,22 @@ class Map extends MapEditor {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.userViewPosition = userViewPosition;
+        this.userSpawnPosition = userSpawnPosition;
         this.disappearingPoint = {
-            x: this.canvas.width / 2,
-            y: this.canvas.height / 2,
+          x: this.canvas.width / 2,
+          y: this.canvas.height / 2,
         };
+        this.mapData = [];
+        this.agents = [];
+    }
+
+    loadAgentsFromJSON(agentData) {
+      agentData.forEach((agent) => {
+        const position = { x: agent.x, y: agent.y };
+        const velocity = agent.velocity;
+        const awareness = agent.awareness;
+        this.agents.push(new Agent(position, velocity, awareness));
+      });
     }
 
     addFloorObject(height, width, depth, begin, end, yIndex, walls) {
@@ -40,7 +52,10 @@ class Map extends MapEditor {
     }
   
     calculateYPosition(yIndex) {
-      return this.canvas.height / 2 + (yIndex * this.canvas.height) / 2;
+      const canvasHeight = this.canvas.height;
+      const floorHeight = canvasHeight / 2;
+      const yPosition = floorHeight + (yIndex * floorHeight) / 64;
+      return yPosition;
     }
   
     isFloorObjectInView(y) {
@@ -76,3 +91,16 @@ class Map extends MapEditor {
     this.ctx.fillRect(0, y - depth, this.canvas.width, depth);
   }
 }
+
+// Usage example
+const map = new Map('canvas', { x: 0, y: 0 }, { x: 0, y: 0 });
+// Load agents from a JSON file
+const agentData = [
+  { x: 100, y: 200, velocity: 2, awareness: 10 },
+  { x: 300, y: 150, velocity: 1, awareness: 5 },
+  // Add more agent data as needed
+];
+map.loadAgentsFromJSON(agentData);
+
+// Start the rendering loop
+map.startRendering();
