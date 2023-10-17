@@ -64,7 +64,7 @@ class Character {
         }
 
         // Check line of sight to user view
-        const map = new Map(this.mapData);
+        const map = new GameMap(this.mapData);
         const startX = Math.floor(this.userView.x);
         const startY = Math.floor(this.userView.y);
         const endX = Math.floor(user.x);

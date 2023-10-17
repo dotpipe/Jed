@@ -15,7 +15,7 @@ class Canvas {
   }
 
   drawMap() {
-    const map = new Map(this.mapData);
+    const map = new GameMap(this.mapData);
     map.drawRectangle();
   }
 
