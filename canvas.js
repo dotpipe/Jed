@@ -29,6 +29,6 @@ class Canvas {
   }
 }
 
-module.exports = {
+export {
   Canvas
 };

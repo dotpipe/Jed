@@ -1,5 +1,5 @@
 // Function to check for collision between moving objects and static objects
-function checkCollision(movingObjects, staticObjects) {
+function checkCollision(movingObjects, staticObjects, gl) {
   let collisionDetected = false;
 
   for (let i = 0; i < movingObjects.length; i++) {
@@ -8,8 +8,11 @@ function checkCollision(movingObjects, staticObjects) {
     for (let j = 0; j < staticObjects.length; j++) {
       const staticObj = staticObjects[j];
 
-      // Check if moving object collides with static object
-      if (movingObj.x === staticObj.x && movingObj.y === staticObj.y && movingObj.z === staticObj.z) {
+      // Perform collision detection logic using WebGL rendering context (gl)
+      // You would typically use bounding volumes or other collision detection techniques specific to your WebGL scene
+
+      // Example: Check if moving object collides with static object based on their positions
+      if (movingObj.position.x === staticObj.position.x && movingObj.position.y === staticObj.position.y && movingObj.position.z === staticObj.position.z) {
         collisionDetected = true;
         break;
       }
@@ -23,7 +26,6 @@ function checkCollision(movingObjects, staticObjects) {
   return collisionDetected;
 }
 
-module.exports = {
+export {
   checkCollision
 };
-

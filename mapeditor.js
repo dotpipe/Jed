@@ -44,3 +44,7 @@ class MapEditor {
     this.drawMap();
   }
 }
+
+export {
+  MapEditor
+};

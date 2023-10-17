@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Wall</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script type="module">
+        import { Wall } from './wall.js';
+       
+        // Create a Three.js scene
+        const scene = new THREE.Scene();
+
+        // Create a camera and set its position
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 5);
+
+        // Create a renderer and set its size
+        // Create a renderer and set its size
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('myCanvas') });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Append the renderer's DOM element to the body
+        document.body.appendChild(renderer.domElement);
+
+        // Instantiate a Wall object
+        const startPoint = new THREE.Vector3(0, 0, 0);
+        const endPoint = new THREE.Vector3(5, 0, 0);
+        const height = 2;
+        const color = 0xffffff;
+        const texture = null;
+        const wall = new Wall(startPoint, endPoint, height, color, texture);
+
+        // Draw the wall in the scene
+        wall.draw(scene, new THREE.MeshBasicMaterial({ color: color }));
+
+        // Create a human character mesh
+        const characterGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const characterMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const character = new THREE.Mesh(characterGeometry, characterMaterial);
+        scene.add(character);
+        const light = new THREE.DirectionalLight(0xffffff, 1); // Color: white, Intensity: 1
+        light.position.set(1, 1, 1); // Set the position of the light
+        scene.add(light); // Add the light to the scene
+        // Set up keyboard controls for character movement
+        const keyboardControls = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        document.addEventListener('keydown', (event) => {
+            keyboardControls[event.key] = true;
+        });
+
+        document.addEventListener('keyup', (event) => {
+            keyboardControls[event.key] = false;
+        });
+
+
+        let cameraRotationX = 0;
+        let cameraRotationY = 0;
+        // Render the scene and update it in a loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            updateCharacterPosition();
+
+            // Update camera rotation based on mouse movement
+            camera.rotation.x = cameraRotationX;
+            camera.rotation.y = cameraRotationY;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+        document.addEventListener('mousemove', (event) => {
+            const mouseSpeed = 0.002;
+            cameraRotationX -= event.movementY * mouseSpeed;
+            cameraRotationY -= event.movementX * mouseSpeed;
+        });
+        function updateCharacterPosition() {
+            const speed = 0.1;
+
+            const forward = new THREE.Vector3(0, 0, -1);
+            const right = new THREE.Vector3(1, 0, 0);
+
+            const cameraDirection = forward.clone().applyQuaternion(camera.quaternion);
+            const cameraRight = right.clone().applyQuaternion(camera.quaternion);
+
+            if (keyboardControls.ArrowUp) {
+                character.position.add(cameraDirection.multiplyScalar(-speed));
+            }
+            if (keyboardControls.ArrowDown) {
+                character.position.add(cameraDirection.multiplyScalar(speed));
+            }
+            if (keyboardControls.ArrowLeft) {
+                character.position.add(cameraRight.multiplyScalar(-speed));
+            }
+            if (keyboardControls.ArrowRight) {
+                character.position.add(cameraRight.multiplyScalar(speed));
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Peripteral Building Editor</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+    <script>console.log("8");</script>
+</head>
+
+<body>
+    <h1>Peripteral Building Editor</h1>
+    <div>
+        <label for="width">Width:</label>
+        <input type="number" id="width" value="100">
+    </div>
+    <div>
+        <label for="height">Height:</label>
+        <input type="number" id="height" value="50">
+    </div>
+    <div>
+        <label for="columnCount">Column Count:</label>
+        <input type="number" id="columnCount" value="6">
+    </div>
+    <div>
+        <label for="columnSpacing">Column Spacing:</label>
+        <input type="number" id="columnSpacing" value="5">
+    </div>
+    <canvas id="canvas" width="800" height="400"></canvas>
+
+    <script type="module">
+        import { Character } from "./character.js";
+        //import { AI } from "./ai.js";
+        import { Canvas } from "./canvas.js";
+        import { checkCollision } from "./collision.js";
+        import { Column } from "./column.js";
+        import { Entrance } from "./entrance.js";
+        import { Game } from "./game.js";
+        import { InputManager } from "./inputmanager.js";
+        import { Map } from "./map.js";
+        import { MapEditor } from "./mapeditor.js";
+        import { Master } from "./master.js";
+        import { Protonic } from "./protonic.js";
+        import { Segment } from "./segment.js";
+        import { SegmentEditor } from "./segmenteditor.js";
+        import { User } from "./user.js";
+        import { Wall } from "./wall.js";
+        import { Worker } from "./worker.js";
+        console.log("*");
+        const segmentEditor = new SegmentEditor();
+        const peripteralBuilding = segmentEditor.createPeripteralBuilding("Peripteral Building", 100, 50, 6, 5);
+        console.log(peripteralBuilding);
+        const segmentJSON = {
+            "type": "building",
+            "shape": "rectangle",
+            "dimensions": {
+                "width": 20,
+                "height": 30
+            },
+            "position": {
+                "x": 50,
+                "y": 50
+            },
+            "textures": {
+                "walls": "black",
+                "roof": "red",
+                "columns": "blue"
+            },
+            "details": {
+                "columns": {
+                    "count": 8,
+                    "spacing": 4
+                },
+                "entrance": {
+                    "position": "center",
+                    "width": 24,
+                    "height": 10
+                }
+            }
+        };
+        console.log("*");
+        // Get the canvas element and its 2D rendering context
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        console.log("!");
+        const segment = new Segment(
+            segmentJSON.type,
+            segmentJSON.shape,
+            segmentJSON.dimensions,
+            segmentJSON.position,
+            segmentJSON.textures,
+            segmentJSON.details
+        );
+
+        // Function to render the peripteral building on the canvas
+        function renderPeripteralBuilding(building) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Render the walls
+            ctx.fillStyle = "gray";
+            ctx.fillRect(0, 0, building.width, building.height);
+            console.log(building);
+            // Render the entrance
+            ctx.fillStyle = "blue";
+            ctx.fillRect(
+                building.walls[0].entrances[0].position.x,
+                building.walls[0].entrances[0].position.y,
+                building.walls[0].entrances[0].width,
+                building.walls[0].entrances[0].height
+            );
+            // Render the columns
+            ctx.fillStyle = "darkgray";
+            building.walls[0].columns.forEach(column => {
+                ctx.fillRect(
+                    column.position.x,
+                    column.position.y,
+                    column.width,
+                    column.height
+                );
+            });
+
+            console.log(width);
+        }
+
+        // Function to update the peripteral building dimensions based on user input
+        function updateBuildingDimensions() {
+            const width = parseInt(document.getElementById("width").value);
+            const height = parseInt(document.getElementById("height").value);
+            const columnCount = parseInt(document.getElementById("columnCount").value);
+            const columnSpacing = parseInt(document.getElementById("columnSpacing").value);
+            console.log(peripteralBuilding);
+            peripteralBuilding.walls[0].dimensions.width = width;
+            peripteralBuilding.walls[0].dimensions.height = height;
+            peripteralBuilding.walls[0].columns = [];
+
+            const columnWidth = Math.floor((width - (columnCount + 1) * columnSpacing) / columnCount);
+            const columnHeight = height;// - peripteralBuilding.entrance.height;
+
+            for (let i = 0; i < columnCount; i++) {
+                const columnX = columnSpacing + (columnSpacing + columnWidth) * i;
+                const column = {
+                    position: { x: columnX, y: 0 },
+                    width: columnWidth,
+                    height: columnHeight
+                };
+                peripteralBuilding.walls[0].columns.push(column);
+            }
+            console.log(width);
+            renderPeripteralBuilding(peripteralBuilding);
+        }
+
+        // Add event listeners to update the building dimensions when the input values change
+        document.getElementById("width").addEventListener("change", updateBuildingDimensions);
+        document.getElementById("height").addEventListener("change", updateBuildingDimensions);
+        document.getElementById("columnCount").addEventListener("change", updateBuildingDimensions);
+        document.getElementById("columnSpacing").addEventListener("change", updateBuildingDimensions);
+
+        // document.addEventListener("DOMContentLoaded", function () {
+            // Your code here
+
+            // Initial rendering of the peripteral building
+            renderPeripteralBuilding(peripteralBuilding);
+        // });
+        console.log("*");
+    </script>
+</body>
+
+</html>

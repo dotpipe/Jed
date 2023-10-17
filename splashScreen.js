@@ -14,6 +14,6 @@ class SplashScreen {
   }
 }
 
-module.exports = {
+export {
   SplashScreen
 };

@@ -1,8 +1,17 @@
 class Map {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
+    this.gl = this.canvas.getContext('webgl');
     this.layers = [];
+    this.mapData = mapData;
+    this.xAxis = 0; // X axis
+    this.yAxis = 0; // Y axis
+    this.zAxis = 0; // Z axis
+  }
+
+  isPathClear(startX, startY, startZ, endX, endY, endZ) {
+    // Implementation of path clearance check using WebGL
+    // ...
   }
 
   addLayer(color) {
@@ -18,17 +27,12 @@ class Map {
   }
 
   draw(user) {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    for (const layer of this.layers) {
-      this.ctx.fillStyle = layer.color;
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-      for (const wall of layer.walls) {
-        wall.draw(this.ctx, { x: this.canvas.width / 2, y: this.canvas.height / 2, z: 0 }, user);
-      }
-    }
-
-    user.draw(this.ctx);
+    // Implementation of WebGL rendering for the map and walls
+    // ...
   }
 }
+
+export {
+  Map
+
+};

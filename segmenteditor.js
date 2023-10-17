@@ -1,127 +1,126 @@
+import Segment from "./segment.js";
+import Wall from "./wall.js";
+import Entrance from "./entrance.js";
+import Column from "./column.js";
+import * as THREE from "./node_modules/three/build/three.module.js";
+import WallMinimode from "./wallMinimode.js";
+
 class SegmentEditor {
     constructor() {
-      this.segments = [];
-      this.doors = [];
-      this.activeWallIndex = -1;
-      this.activeGroupIndices = [];
+        this.segments = [];
+        this.doors = [];
+        this.activeWallIndex = -1;
+        this.activeGroupIndices = [];
+        this.tetherPosition = { x: 0, y: 0, z: 0 };
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.scene = new THREE.Scene();
+        this.camera.position.z = 5;
+        this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('myCanvas') });
+        this.wallMinimodeActive = false;
+        this.mouseDown = false;
+        this.wallMinimode = new WallMinimode(); // Initialize the wallMinimode property
     }
-  
+
+    calculatePOV() {
+        // Calculate the user's point of view (POV) looking at the tether position
+        const cameraForward = new THREE.Vector3(0, 0, -1);
+        const inverseRotation = new THREE.Euler(-this.cameraRotation.x, -this.cameraRotation.y, -this.cameraRotation.z);
+        const rotatedForward = cameraForward.clone().applyEuler(inverseRotation);
+        const POV = new THREE.Vector3(
+            this.cameraPosition.x + rotatedForward.x,
+            this.cameraPosition.y + rotatedForward.y,
+            this.cameraPosition.z + rotatedForward.z
+        );
+        return POV;
+    }
+
+    rotateVector(vector, rotation) {
+        // Implement logic to rotate a vector based on the given rotation angles
+        // This can be done using rotation matrices or quaternion rotations
+        // Return the rotated vector
+    }
+
     createSegment(name) {
-      const segment = new Segment(name);
-      this.segments.push(segment);
-      return segment;
+        const segment = new Segment(name);
+        this.segments.push(segment);
+        return segment;
     }
-  
+
     createWall(segment, texture, width, height) {
-    const wall = new Wall(texture, width, height);
-    segment.addWall(wall);
-    return wall;
-  }
 
-  activateWall(index) {
-    this.activeWallIndex = index;
-  }
+        texture = "./lowerhalfneck.jpg";
+        const wall = new Wall(texture, width, height);
+        segment.addWall(wall);
+        this.scene.add(wall.mesh);
 
-  deactivateWall() {
-    this.activeWallIndex = -1;
-  }
+        // Automatically enter the wall minimode
+        this.enterWallMinimode(wall);
 
-  groupWalls(indices) {
-    this.activeGroupIndices = indices;
-  }
-
-  deselect() {
-    this.activeWallIndex = -1;
-  }
-
-  copyWall(index) {
-    const wall = this.segments[0].walls[index];
-    const copiedWall = Wall.fromJSON(wall.toJSON());
-    this.segments[0].addWall(copiedWall);
-  }
-
-  handleMovement(key) {
-    const activeWall = this.segments[0].walls[this.activeWallIndex];
-    const movementSpeed = 1; // Adjust the movement speed as needed
-  
-    switch (key) {
-      case "ArrowUp":
-        activeWall.move(0, -movementSpeed);
-        break;
-      case "ArrowDown":
-        activeWall.move(0, movementSpeed);
-        break;
-      case "ArrowLeft":
-        activeWall.move(-movementSpeed, 0);
-        break;
-      case "ArrowRight":
-        activeWall.move(movementSpeed, 0);
-        break;
-      default:
-        break;
+        return wall;
     }
-  }
-  
-  handleRotation(key) {
-    const activeWall = this.segments[0].walls[this.activeWallIndex];
-    const rotationSpeed = 1; // Adjust the rotation speed as needed
-  
-    switch (key) {
-      case "W":
-        activeWall.rotate(rotationSpeed);
-        break;
-      case "S":
-        activeWall.rotate(-rotationSpeed);
-        break;
-      default:
-        break;
+    enterWallMinimode(wall) {
+        this.wallMinimodeActive = true;
+        this.wallMinimode.wall = wall; // Set the wall object to the wall minimode
+        // Add event listeners for mouse/touch events
+        document.addEventListener("mousedown", this.handleMouseDown);
+        document.addEventListener("mousemove", this.handleMouseMove);
+        document.addEventListener("mouseup", this.handleMouseUp);
     }
-  }
 
-  handleCopy(key) {
-    // Implement logic to handle copying based on user input
-  }
-
-  handleDeselect(key) {
-    if (key === "Escape") {
-      this.deselect();
+    exitWallMinimode() {
+        this.wallMinimodeActive = false;
+        // Remove event listeners
+        document.removeEventListener("mousedown", this.handleMouseDown);
+        document.removeEventListener("mousemove", this.handleMouseMove);
+        document.removeEventListener("mouseup", this.handleMouseUp);
     }
-  }
-  
-  attachWall(segment, angle) {
-    // Implement logic to attach a wall at the specified angle
-    // based on the segment's north direction
-  }
 
-  attachStairs(segment, angle) {
-    // Implement logic to attach stairs at the specified angle
-    // based on the segment's north direction
-  }
+    developWall(wall) {
+        // Create a wall minimode instance
+        const wallMinimode = new WallMinimode();
 
-  attachSlide(segment, angle) {
-    // Implement logic to attach a slide at the specified angle
-    // based on the segment's north direction
-  }
+        // Set the wall object to the wall minimode
+        wallMinimode.wall = wall;
 
-  attachFloatingPlatform(segment, angle) {
-    // Implement logic to attach a floating platform at the specified angle
-    // based on the segment's north direction
-  }
+        // Create the display for the wall minimode
+        wallMinimode.createDisplay();
+
+        // Append the display to the document body or any desired container
+        document.body.appendChild(wallMinimode.display);
+    }
+
+    handleMouseDown = (event) => {
+        this.mouseDown = true;
+        // Get the coordinates of the mouse click or touch
+        const mouseX = event.clientX || event.touches[0].clientX;
+        const mouseY = event.clientY || event.touches[0].clientY;
+        // Find the wall that was clicked or touched
+        const clickedWallIndex = this.findClickedWall(mouseX, mouseY);
+        if (clickedWallIndex !== -1) {
+            this.activeWallIndex = clickedWallIndex;
+        }
+    };
+
+    handleMouseMove = (event) => {
+        if (this.mouseDown) {
+            // Handle mouse move logic
+            // ...
+        }
+    };
+
+    handleMouseUp = (event) => {
+        this.mouseDown = false;
+        // Handle mouse up logic
+        // ...
+    };
+
+    findClickedWall(mouseX, mouseY) {
+        // Implement logic to find the wall that was clicked or touched
+        // Return the index of the clicked wall or -1 if no wall was found
+    }
+
+    // Other methods and logic...
+
 }
 
-// Usage
-const segmentEditor = new SegmentEditor();
-
-const segment1 = segmentEditor.createSegment("Room 1");
-const wall1 = segmentEditor.createWall(segment1, "texture1", 255, 255);
-const wall2 = segmentEditor.createWall(segment1, "texture2", 255, 255);
-
-segmentEditor.activateWall(0); // Activate wall1
-segmentEditor.groupWalls([0, 1]); // Group wall1 and wall2
-
-segmentEditor.handleMovement("ArrowUp"); // Handle movement based on user class movements
-segmentEditor.handleRotation("W"); // Handle rotation based on user class movements
-segmentEditor.handleCopy("C"); // Handle copying based on user input
-segmentEditor.handleDeselect("Escape"); // Handle deselecting based on user input
-
-console.log(segment1);
+export default SegmentEditor;

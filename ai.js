@@ -3,6 +3,13 @@ class AI {
   constructor(userView) {
     this.userView = userView;
     this.direction = 'forward';
+    this.game = game;
+    this.health = 100; // Initial health value
+  }
+
+  throwProtonic() {
+    const newProtonic = new Protonic(/* pass any necessary parameters */);
+    this.game.protonics.push(newProtonic);
   }
 
   updateDirection(staticObjects, user) {
@@ -28,6 +35,7 @@ class AI {
     const endX = Math.floor(user.x);
     const endY = Math.floor(user.y);
     const lineOfSightClear = map.isPathClear(startX, startY, endX, endY);
+
     if (lineOfSightClear) {
       this.direction = 'towardsUser';
     } else {
@@ -111,6 +119,6 @@ class AI {
   }
 }
 
-module.exports = {
+export {
   AI
 };

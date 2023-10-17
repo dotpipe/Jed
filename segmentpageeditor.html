@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>IDE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #canvas-container {
+            left: 20%;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="canvas-container">
+
+        <canvas id="myCanvas"></canvas>
+    </div>
+    <button style="z-index: 3;" id="changeTextureButton">Change Texture</button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script type="module" src="segmenteditor.js"></script>
+    <script type="module">
+        import SegmentEditor from './segmenteditor.js';
+        // Create an instance of SegmentEditor
+        const segmentEditor = new SegmentEditor();
+
+        // Set up the canvas element
+        const canvas = document.getElementById('myCanvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Initialize the SegmentEditor
+        segmentEditor.renderer.setSize(window.innerWidth, window.innerHeight);
+        segmentEditor.renderer.setPixelRatio(window.devicePixelRatio);
+        // canvas.appendChild(segmentEditor.renderer.domElement);
+        // const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('myCanvas') });
+        // renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        // // Append the renderer's DOM element to the body
+        // document.body.appendChild(renderer.domElement);
+        // Call the necessary methods to set up the scene
+        segmentEditor.createSegment("Segment 1");
+        const wall = segmentEditor.createWall(segmentEditor.segments[0], "lowerhalfneck.jpg", 100, 50);
+
+        // Activate the WallMinimode for the created wall
+        segmentEditor.enterWallMinimode(wall);
+        // Render the scene
+        let animationId; // Declare a variable to store the animation ID
+        // Render the scene and update it in a loop
+        const keyboardControls = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        let cameraRotationX = 0;
+        let cameraRotationY = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+
+            updateCharacterPosition(segmentEditor.camera);
+
+            // Update camera rotation based on mouse movement
+            segmentEditor.camera.rotation.x = cameraRotationX;
+            segmentEditor.camera.rotation.y = cameraRotationY;
+
+            segmentEditor.renderer.render(segmentEditor.scene, segmentEditor.camera);
+        }
+        animate();
+
+        function updateCharacterPosition(camera) {
+            const speed = 0.1;
+
+            const forward = new THREE.Vector3(0, 0, -1);
+            const right = new THREE.Vector3(1, 0, 0);
+
+            const cameraDirection = forward.clone().applyQuaternion(camera.quaternion);
+            const cameraRight = right.clone().applyQuaternion(camera.quaternion);
+
+            if (keyboardControls.ArrowUp) {
+                character.position.add(cameraDirection.multiplyScalar(-speed));
+            }
+            if (keyboardControls.ArrowDown) {
+                character.position.add(cameraDirection.multiplyScalar(speed));
+            }
+            if (keyboardControls.ArrowLeft) {
+                character.position.add(cameraRight.multiplyScalar(-speed));
+            }
+            if (keyboardControls.ArrowRight) {
+                character.position.add(cameraRight.multiplyScalar(speed));
+            }
+        }
+        // Stop the animation loop when needed
+        function stopAnimation() {
+            cancelAnimationFrame(animationId);
+        }
+        // Get a reference to the button element
+        const changeTextureButton = document.getElementById('changeTextureButton');
+
+        // Add a click event listener to the button
+        changeTextureButton.addEventListener('click', () => {
+            // Handle the button click event
+            const newTexturePath = "lowerhalfneck.jpg";
+            segmentEditor.wallMinimode.updateWallTexture(newTexturePath);
+        });
+    </script>
+</body>
+
+</html>

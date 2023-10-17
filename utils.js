@@ -13,7 +13,7 @@ function updateJSONData(jsonData) {
   fs.writeFileSync('data.json', updatedData, 'utf8');
 }
 
-module.exports = {
+export {
   loadJSONData,
   updateJSONData
 };

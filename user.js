@@ -68,3 +68,6 @@ class User {
     }
   }
   
+export {
+  User
+};

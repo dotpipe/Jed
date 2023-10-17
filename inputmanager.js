@@ -102,6 +102,6 @@ class InputManager {
     }
   }
   
-  // Usage
-  const user = new User();
-  const inputManager = new InputManager(user);
+export {
+    InputManager
+  };

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protonic Scene</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script src="protonic.js"></script>
+    <script>
+        // Create the scene, camera, renderer, and other necessary objects
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Create the Protonic object
+        const protonic = new Protonic(10, 0.5, 0.1, 0xff0000, 'linear', 0.05);
+
+        // Add the Protonic object to the scene
+        protonic.draw(scene, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+
+        // Define the animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Update the Protonic object's position
+            protonic.position += protonic.speed;
+
+            // Render the scene with the updated position
+            renderer.render(scene, camera);
+        }
+
+        // Update camera aspect ratio when the window is resized
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }, false);
+
+        // Start the animation loop
+        animate();
+    </script>
+</body>
+
+</html>

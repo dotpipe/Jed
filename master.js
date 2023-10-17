@@ -67,34 +67,7 @@ class Master {
       }
     }
   }
-  
-  // Usage
-  const master = new Master();
-  
-  const segment1 = new Segment("Room 1");
-  const segment2 = new Segment("Room 2");
-  const segment3 = new Segment("Room 3");
-  
-  segment1.push(wall1, wall2, wall3); // Add walls to segment1
-  segment2.push(wall4, wall5); // Add walls to segment2
-  segment3.push(wall6); // Add walls to segment3
-  
-  master.addSegment(segment1);
-  master.addSegment(segment2);
-  master.addSegment(segment3);
-  
-  master.setSegment("Room 1");
-  segment1.buffer();
-  
-  master.setSegment("Room 2");
-  segment2.buffer();
-  
-  master.setSegment("Room 3");
-  segment3.buffer();
-  
-  const buttonPressPosition = { x: 10, y: 10 };
-  const disappearingPoint = `Specify the coordinates of the disappearing point here`;
-  
-  const spritePosition = { x: 50, y: 50 };
-  
-  master.throwObject("Room 2", buttonPressPosition, disappearingPoint, spritePosition);
+ 
+export {
+    Master
+  };
