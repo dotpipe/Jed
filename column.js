@@ -1,4 +1,6 @@
-class Column {
+import Wall from "./wall";
+
+class Column extends Wall {
     constructor(positionX, positionY, width, height) {
       this.position = { x: positionX, y: positionY };
       this.width = width;

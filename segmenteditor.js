@@ -19,6 +19,19 @@ class SegmentEditor {
         this.wallMinimodeActive = false;
         this.mouseDown = false;
         this.wallMinimode = new WallMinimode(); // Initialize the wallMinimode property
+        this.workers = [];
+        this.canvas = null;
+        this.context = null;
+    }
+
+    addAgentToSegment(segment, agent) {
+        // Find the segment in the segments array
+        const targetSegment = this.segments.find(seg => seg === segment);
+
+        // If the segment is found, add the agent to it
+        if (targetSegment) {
+            targetSegment.addAgent(agent);
+        }
     }
 
     calculatePOV() {
@@ -35,15 +48,32 @@ class SegmentEditor {
     }
 
     rotateVector(vector, rotation) {
-        // Implement logic to rotate a vector based on the given rotation angles
-        // This can be done using rotation matrices or quaternion rotations
-        // Return the rotated vector
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromEuler(rotation);
+
+        const rotatedVector = vector.clone();
+        rotatedVector.applyQuaternion(quaternion);
+
+        return rotatedVector;
     }
 
     createSegment(name) {
         const segment = new Segment(name);
         this.segments.push(segment);
         return segment;
+    }
+
+    getUpdatesFromWorkers() {
+        // Implement logic to fetch updates from workers
+        const updates = [];
+
+        // Iterate over the workers and retrieve updates
+        for (const worker of workers) {
+            const workerUpdates = worker.getUpdates(); // Assuming the worker has a method to retrieve updates
+            updates.push(...workerUpdates);
+        }
+
+        return updates;
     }
 
     createWall(segment, texture, width, height) {
@@ -58,6 +88,7 @@ class SegmentEditor {
 
         return wall;
     }
+
     enterWallMinimode(wall) {
         this.wallMinimodeActive = true;
         this.wallMinimode.wall = wall; // Set the wall object to the wall minimode
@@ -87,6 +118,16 @@ class SegmentEditor {
 
         // Append the display to the document body or any desired container
         document.body.appendChild(wallMinimode.display);
+    }
+
+    initCanvas(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.context = this.canvas.getContext('2d');
+
+        // Set up event listeners for map creation
+        this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
     }
 
     handleMouseDown = (event) => {
