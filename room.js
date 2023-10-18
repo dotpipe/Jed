@@ -1,7 +1,9 @@
+import * as THREE from './three.module.js';
+
 class Room {
     constructor() {
         this.segments = [];
-        this.segmentRenderer = new SegmentRenderer();
+        this.scene = new THREE.Scene();
     }
 
     addSegment(segment) {
@@ -27,7 +29,7 @@ class Room {
         const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
         const ceilingGeometry = new THREE.BoxGeometry(10, 0.1, 10);
         const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-        ceiling.position.y = 5;
+        ceiling.position.y = 10;
         roomGeometry.add(ceiling);
 
         // Create the floor
@@ -39,15 +41,15 @@ class Room {
 
         // Set up lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
+        this.scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(1, 1, 1);
-        scene.add(directionalLight);
+        this.scene.add(directionalLight);
 
         const pointLight = new THREE.PointLight(0xffffff, 0.8);
         pointLight.position.set(0, 3, 0);
-        scene.add(pointLight);
+        this.scene.add(pointLight);
 
         return roomGeometry;
     }
@@ -63,10 +65,8 @@ class Room {
         // Add event listener for keyboard input
         document.addEventListener('keydown', this.handleKeyDown.bind(this));
     }
-    
-    createScene() {
-        this.scene = new THREE.Scene();
 
+    createScene() {
         // Add ambient light
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
@@ -107,6 +107,7 @@ class Room {
             // Add more cases for other movement keys if needed
         }
     }
+
     setupCameraControls(camera, renderer) {
         this.controls = new THREE.OrbitControls(camera, renderer.domElement);
         this.controls.enableDamping = true;
@@ -118,6 +119,7 @@ class Room {
         // Add event listener for keyboard input
         document.addEventListener('keydown', this.handleKeyDown.bind(this));
     }
+
     animate() {
         requestAnimationFrame(this.animate.bind(this));
 
@@ -128,3 +130,5 @@ class Room {
         renderer.render(scene, camera);
     }
 }
+
+export { Room };

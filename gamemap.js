@@ -5,6 +5,8 @@ import Segment from './segment.js';
 import Wall from './wall.js';
 import { OrbitControls } from './orbitcontrols.js';
 import Protonic from './protonic.js';
+import { Room } from './room.js';
+
 class GameMap {
 
   constructor(canvasId) {
@@ -43,6 +45,8 @@ class GameMap {
     this.cameraRotationZ = 0;
     this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
     this.protonic = new Protonic(10, 0.5, 0.1, 0xff0000, 'linear', 0.05);
+    this.protonic.setTransformedPosition(this.position.x, this.position.y, this.position.z);
+    this.room = new Room();
     this.animate();
   }
 
@@ -203,7 +207,7 @@ class GameMap {
         moveRight = true;
         break;
       case 'Space': // Spacebar
-        this.protonic = new Protonic(10, 0.5, 0.1, 0xff0000, 'linear', 0.05);
+        this.protonic = new Protonic(6, 0.5, 0.1, 0xff0000, 'bouncing', 0.05);
         this.protonic.draw(this.scene);
         break;
     }
@@ -224,35 +228,6 @@ class GameMap {
         moveRight = false;
         break;
     }
-  }
-
-  isPathClear(startX, startY, startZ, endX, endY, endZ) {
-    // Implementation of path clearance check using WebGL
-    const threshold = 0.1; // Adjust this value as needed
-
-    // Calculate distances along each axis
-    const distanceX = Math.abs(endX - startX);
-    const distanceY = Math.abs(endY - startY);
-    const distanceZ = Math.abs(endZ - startZ);
-
-    // Check for potential collision along each axis
-    if (distanceX < threshold) {
-      // Stop movement along the X axis
-      return false;
-    }
-
-    if (distanceY < threshold) {
-      // Stop movement along the Y axis
-      return false;
-    }
-
-    if (distanceZ < threshold) {
-      // Stop movement along the Z axis
-      return false;
-    }
-
-    // No collision detected
-    return true;
   }
 
   addLayer(color) {
@@ -345,7 +320,7 @@ class GameMap {
     const ceilingGeometry = new THREE.BoxGeometry(roomWidth, 0.1, roomDepth);
     const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
     const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    ceiling.position.set(0, roomHeight / 2, 0);
+    ceiling.position.set(0, roomHeight, 0);
 
     // Add the walls, floor, and ceiling to the scene
     walls.forEach(wall => this.scene.add(wall));
@@ -355,7 +330,7 @@ class GameMap {
     // Set up renderer
     this.renderer.setSize(this.canvas.width, this.canvas.height);
 
-    this.render();
+    // this.render();
 
     // Render the scene and update it in a loop
     this.animate();
@@ -368,7 +343,7 @@ class GameMap {
   }
 
   render() {
-    this.renderer.clear();
+    // this.renderer.clear();
 
     // Set the background color to red
     this.renderer.setClearColor(0xff0000);
@@ -377,10 +352,10 @@ class GameMap {
     this.renderer.render(this.scene, this.camera);
 
     // Set the background color to blue
-    this.renderer.setClearColor(0x0000ff);
+    // this.renderer.setClearColor(0x0000ff);
 
     // Render the scene again with the camera
-    this.renderer.render(this.scene, this.camera);
+    // this.renderer.render(this.scene, this.camera);
   }
 
   createSegments() {
@@ -388,11 +363,25 @@ class GameMap {
     const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
     const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       const wall = new THREE.Mesh(wallGeometry, wallMaterial);
       wall.position.set(i * 2 - 10, 0, 0); // Position the walls along the x-axis
       this.segments.push(wall);
     }
+
+    // Create the ceiling
+    const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const ceilingGeometry = new THREE.BoxGeometry(10, 0.1, 10);
+    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+    ceiling.position.set(0, 1, 0); // Position the walls along the x-axis
+    this.segments.add(ceiling);
+
+    // Create the floor
+    const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const floorGeometry = new THREE.BoxGeometry(10, 0.1, 10, 10, 10, 10);
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.position.set(0, 1, 0); // Position the walls along the x-axis
+    this.segments.add(floor);
   }
 
   animate() {
@@ -418,19 +407,21 @@ class GameMap {
 
     // Check if the player has crossed into a new segment
     // Assuming segments is defined in this class
-    for (const segment of this.segments) {
-      if (this.isPlayerInSegment(playerPosition, segment) && !segment.isLoaded) {
-        segment.draw();
-        segment.isLoaded = true;
-      }
-    }
+    // for (const segment of this.segments) {
+    //   if (this.isPlayerInSegment(playerPosition, segment) && !segment.isLoaded) {
+    //     segment.draw();
+    //     segment.isLoaded = true;
+    //   }
+    // }
     // this.updateCharacterPosition();
     // Update camera rotation based on mouse movement
-    // this.camera.rotation.x = this.cameraRotationX * 0.00002;
-    this.camera.rotation.z = this.cameraRotationZ * 0.0000;
+    this.camera.rotation.x = this.cameraRotationX * 0.2;
+    this.camera.rotation.y = this.cameraRotationY * 0.2;
+    this.camera.rotation.z = this.cameraRotationZ * 0.2;
 
-    this.render();
     this.controls.update(); // Update the controls
+
+    this.protonic.setTransformedPosition(this.camera.position.x, this.camera.position.y, this.camera.position.z);
     this.checkCollision(this.camera);
     const delta = this.hid.clock.getDelta();
     this.hid.update(delta);
