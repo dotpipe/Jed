@@ -63,32 +63,7 @@ class Room {
         // Add event listener for keyboard input
         document.addEventListener('keydown', this.handleKeyDown.bind(this));
     }
-    createRoomGeometry() {
-        const roomGeometry = new THREE.Group();
-
-        // Create walls
-        const wallGeometry = new THREE.BoxGeometry(this.width, this.height, this.depth);
-        const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
-        const walls = new THREE.Mesh(wallGeometry, wallMaterial);
-        roomGeometry.add(walls);
-
-        // Create floor
-        const floorGeometry = new THREE.BoxGeometry(this.width, 0.1, this.depth);
-        const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
-        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.position.y = -this.height / 2;
-        roomGeometry.add(floor);
-
-        // Create ceiling
-        const ceilingGeometry = new THREE.BoxGeometry(this.width, 0.1, this.depth);
-        const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
-        const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-        ceiling.position.y = this.height / 2;
-        roomGeometry.add(ceiling);
-
-        return roomGeometry;
-    }
-
+    
     createScene() {
         this.scene = new THREE.Scene();
 

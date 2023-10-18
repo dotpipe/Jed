@@ -1,45 +1,40 @@
+import * as THREE from './three.module.js';
+
 class Segment {
-  constructor(name) {
-    this.name = name;
+  constructor(startPoint, endPoint, material, scene) {
+    this.startPoint = startPoint;
+    this.endPoint = endPoint;
+    this.material = material;
     this.walls = [];
-    this.ceiling = null;
-    this.floor = null;
-    this.segmentRenderer = new SegmentRenderer();
+    this.isLoaded = false;
+    this.createWalls();
   }
 
-  addWall(wall) {
-    this.walls.push(wall);
-  }
+  createWalls() {
+    const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
 
-  setCeiling(ceiling) {
-    this.ceiling = ceiling;
-  }
-
-  setFloor(floor) {
-    this.floor = floor;
-  }
-
-  setEntrance(entrance) {
-    this.entrance = entrance;
-  }
-  draw(scene) {
-    if (!this.loaded) {
-      return; // Check if the segment is loaded before drawing the walls
+    for (let i = this.startPoint; i < this.endPoint; i++) {
+      const wall = new THREE.Mesh(wallGeometry, this.material);
+      wall.position.set(i * 2 - 10, 0, 0); // Position the walls along the x-axis
+      this.walls.push(wall);
     }
 
-    this.walls.forEach(wall => {
-      wall.draw(scene); // Draw the walls of the segment using the draw() method of the Wall class
-    });
+    return this.walls;
   }
 
-  saveToFile() {
-    const data = JSON.stringify(this.toJSON());
-    // Send the data to a PHP file for saving
-    // You can use AJAX or any other method to send the data to the PHP file
-    // Example using AJAX:
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'save_segment.php');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(data);
+  draw(scene) {
+    if (!this.isLoaded) {
+      this.walls.forEach(wall => scene.add(wall));
+      this.isLoaded = true;
+    }
+  }
+
+  hide(scene) {
+    if (this.isLoaded) {
+      this.walls.forEach(wall => scene.remove(wall));
+      this.isLoaded = false;
+    }
   }
 }
+
+export default Segment;

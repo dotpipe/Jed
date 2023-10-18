@@ -1,31 +1,96 @@
-// import * as THREE from './three.module.js';
+import * as THREE from './three.module.js';
 // import { PointerLockControls } from './node_modules/three/examples/jsm/controls/PointerLockControls.js';
-
-export class GameMap {
+import { Character } from './character.js';
+import HumanInterfaceDevice from './humaninterfacedevice.js';
+import Segment from './Segment.js';
+import Wall from './wall.js';
+class GameMap {
 
   constructor(canvasId) {
     // Initialize canvas and WebGL context
     this.canvas = document.getElementById('canvas');
-    this.gl = this.canvas.getContext('webgl');
+    // this.gl = this.canvas.getContext('webgl');
     this.layers = [];
-    // this.mapData = mapData;
     this.xAxis = 0; // X axis
     this.yAxis = 0; // Y axis
     this.zAxis = 0; // Z axis
+    this.position = [ x => this.xAxis, y => this.yAxis, z => this.zAxis ]; 
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, highperformance: true }); // Initialize the renderer
+    // Initialize camera
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     // Add event listeners for HID control
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-    // Add more event listeners for other HID controls as needed
 
     // Initialize camera target position
     this.targetX = 0;
     this.targetY = 0;
     this.targetZ = 0;
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    document.addEventListener('keyup', this.handleKeyUp.bind(this));
+    this.character = new Character("Me", [0, 0, 0], 100, 0.1);
+    this.scene = new THREE.Scene();
+    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    this.segmentObject = new Segment(0, 10, wallMaterial, this.scene);
+    this.segments = this.segmentObject.createWalls();
+    // Initialize HumanInterfaceDevice
+    this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
+    this.animate();
+  }
+  
+  checkCollision(camera) {
+    const cameraPosition = camera.position;
+    const distanceThreshold = 0.1;
+  
+    let closestWall = null;
+    let closestDistance = Infinity;
+  
+    // Iterate over all walls and find the closest one
+    for (const wall of this.segments) {
+      const wallPosition = wall.position;
+      const distanceX = Math.abs(cameraPosition.x - wallPosition.x);
+      const distanceZ = Math.abs(cameraPosition.z - wallPosition.z);
+      const distance = Math.sqrt(distanceX * distanceX + distanceZ * distanceZ);
+  
+      if (distance < closestDistance) {
+        closestWall = wall;
+        closestDistance = distance;
+      }
+    }
+  
+    if (closestWall && closestDistance < distanceThreshold) {
+      const movementDirection = camera.getWorldDirection(new THREE.Vector3());
+  
+      // Calculate the correction vector to move the camera away from the wall
+      const correctionDistance = distanceThreshold - closestDistance;
+      const correction = movementDirection.clone().multiplyScalar(correctionDistance);
+  
+      // Move the camera away from the wall
+      camera.position.add(correction);
+  
+      // Disable movement in the direction of the closest wall
+      if (movementDirection.x > 0) {
+        camera.moveRight = false;
+      } else if (movementDirection.x < 0) {
+        camera.moveLeft = false;
+      }
+  
+      if (movementDirection.z > 0) {
+        camera.moveForward = false;
+      } else if (movementDirection.z < 0) {
+        camera.moveBackward = false;
+      }
+    }
+  
+    // Handle mouse movements for camera look
+    const mouseMovementX = camera.rotation.x; /* get mouse movement in X direction */
+    const mouseMovementY = camera.rotation.y;/* get mouse movement in Y direction */
+  
+    // Adjust camera rotation based on mouse movements
+    camera.rotation.y -= mouseMovementX * 0.002; // Adjust the rotation speed as needed
+    camera.rotation.x -= mouseMovementY * 0.002; // Adjust the rotation speed as needed
   }
 
   loadSegments() {
@@ -42,14 +107,14 @@ export class GameMap {
     }
   }
 
-  isPlayerInSegment(playerPosition, segment) {
+  isPlayerInSegment(playerPosition, segments) {
     // Check if the player's position is within the segment's boundaries
-    const startX = segment.startPoint.x;
-    const startY = segment.startPoint.y;
-    const startZ = segment.startPoint.z;
-    const endX = segment.endPoint.x;
-    const endY = segment.endPoint.y;
-    const endZ = segment.endPoint.z;
+    const startX = segments.startPoint;
+    const startY = segments.startPoint;
+    const startZ = segments.startPoint;
+    const endX = segments.endPoint;
+    const endY = segments.endPoint;
+    const endZ = segments.endPoint;
 
     return (
       playerPosition.x >= startX &&
@@ -137,12 +202,14 @@ export class GameMap {
   }
 
   handleMouseMove(event) {
-    const mouseSpeed = 0.002;
-    const deltaX = event.movementX * mouseSpeed;
-    const deltaY = event.movementY * mouseSpeed;
+    // Assuming that the `controls` instance of the `PointerLockControls` class is stored in the `hid` property
+    if (this.hid.controls.isLocked) {
+      const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+      const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
-    controls.rotateY(deltaX);
-    controls.rotateX(deltaY);
+      this.hid.controls.moveRight(-movementX * 0.002);
+      this.hid.controls.moveForward(-movementY * 0.002);
+    }
   }
 
   handleMouseDown(event) {
@@ -155,16 +222,17 @@ export class GameMap {
     // Add your code here
   }
 
-  draw(user) {
+  draw() {
+    this.clock = new THREE.Clock();
     // Create a THREE.js scene, camera, and renderer
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, this.canvas.width / this.canvas.height, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
-
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(75, this.canvas.width / this.canvas.height, 0.1, 1000);
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
+    this.hid = new HumanInterfaceDevice(this.camera, this.renderer.domElement);
     // Set up camera position and controls
-    camera.position.set(0, 0, 10);
-    const controls = new PointerLockControls(camera, this.canvas);
-    scene.add(controls.getObject());
+    this.camera.position.set(0, 0, 10);
+    this.controls = new PointerLockControls(this.camera, this.canvas);
+    this.scene.add(this.controls.getObject());
 
     // Enable pointer lock
     this.canvas.addEventListener('click', () => {
@@ -174,22 +242,12 @@ export class GameMap {
     // Handle pointer lock change
     const handlePointerLockChange = () => {
       if (document.pointerLockElement === this.canvas) {
-        controls.enabled = true;
+        this.controls.enabled = true;
       } else {
-        controls.enabled = false;
+        this.controls.enabled = false;
       }
     };
     document.addEventListener('pointerlockchange', handlePointerLockChange);
-
-    // Handle user movement
-    const handleUserMovement = () => {
-      if (controls.enabled) {
-        // Handle user movement based on user input
-        // Add your movement logic here
-      }
-    };
-    document.addEventListener('keydown', handleUserMovement);
-    document.addEventListener('keyup', handleUserMovement);
 
     // Create the room geometry
     const roomWidth = 100;
@@ -224,54 +282,64 @@ export class GameMap {
     ceiling.position.set(0, roomHeight / 2, 0);
 
     // Add the walls, floor, and ceiling to the scene
-    walls.forEach(wall => scene.add(wall));
-    scene.add(floor);
-    scene.add(ceiling);
+    walls.forEach(wall => this.scene.add(wall));
+    this.scene.add(floor);
+    this.scene.add(ceiling);
 
     // Set up renderer
-    renderer.setSize(this.canvas.width, this.canvas.height);
+    this.renderer.setSize(this.canvas.width, this.canvas.height);
 
-    let cameraRotationX = 0;
-    let cameraRotationY = 0;
     // Render the scene and update it in a loop
-    function animate() {
-      // Get the current position of the player
-      const playerPosition = character.position;
+    this.animate();
+  }
 
-      const moveSpeed = 0.1;
+  createSegments() {
+    const segments = [];
+    const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
-      if (moveForward) {
-        controls.moveForward(moveSpeed);
-      }
-      if (moveBackward) {
-        controls.moveForward(-moveSpeed);
-      }
-      if (moveLeft) {
-        controls.moveRight(-moveSpeed);
-      }
-      if (moveRight) {
-        controls.moveRight(moveSpeed);
-      }
-      // Check if the player has crossed into a new segment
-      for (const segment of this.segments) {
-        if (this.isPlayerInSegment(playerPosition, segment) && !segment.isLoaded) {
-          segment.draw();
-          segment.isLoaded = true;
-        }
-      }
-      controls.update()
-      // Render the scene
-      renderer.render(scene, camera);
-
-      // Call the animate() method recursively
-      requestAnimationFrame(this.animate.bind(this));
+    for (let i = 0; i < 10; i++) {
+      const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+      wall.position.set(i * 2 - 10, 0, 0); // Position the walls along the x-axis
+      this.segments.push(wall);
     }
-    animate();
-    document.addEventListener('mousemove', (event) => {
-      const mouseSpeed = 0.002;
-      cameraRotationX -= event.movementY * mouseSpeed;
-      cameraRotationY -= event.movementX * mouseSpeed;
-    });
+  }
+
+  animate() {
+    // Get the current position of the player
+    // Assuming character is a global object or it's defined in this class
+    const playerPosition = this.character.position;
+
+    const moveSpeed = 0.1;
+
+    // Use the controls instance from the HumanInterfaceDevice class
+    if (this.hid.moveForward) {
+      this.hid.controls.moveForward(moveSpeed);
+    }
+    if (this.hid.moveBackward) {
+      this.hid.controls.moveForward(-moveSpeed);
+    }
+    if (this.hid.moveLeft) {
+      this.hid.controls.moveRight(-moveSpeed);
+    }
+    if (this.hid.moveRight) {
+      this.hid.controls.moveRight(moveSpeed);
+    }
+
+    // Check if the player has crossed into a new segment
+    // Assuming segments is defined in this class
+    for (const segment of this.segments) {
+      if (this.isPlayerInSegment(playerPosition, segment) && !segment.isLoaded) {
+        segment.draw();
+        segment.isLoaded = true;
+      }
+    }
+    this.checkCollision(this.camera);
+    const delta = this.hid.clock.getDelta();
+    this.hid.update(delta);
+    this.segmentObject.draw(this.scene);
+    requestAnimationFrame(this.animate.bind(this));
+    this.renderer.render(this.scene, this.camera);
   }
 
   updateCharacterPosition() {
@@ -297,3 +365,5 @@ export class GameMap {
     }
   }
 }
+
+export default GameMap;

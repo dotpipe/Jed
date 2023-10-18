@@ -1,8 +1,8 @@
+import * as THREE from "./node_modules/three/build/three.module.js";
 import Segment from "./segment.js";
 import Wall from "./wall.js";
 import Entrance from "./entrance.js";
 import Column from "./column.js";
-import * as THREE from "./node_modules/three/build/three.module.js";
 import WallMinimode from "./wallMinimode.js";
 
 class SegmentEditor {

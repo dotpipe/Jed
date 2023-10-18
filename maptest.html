@@ -1,111 +1,20 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>3D Room Rendering</title>
-    <style>
-        canvas {
-            display: block;
-            margin: 0 auto;
-        }
-    </style>
+  <title>3D Game</title>
+  <style>
+    body { margin: 0; }
+    canvas { width: 100%; height: 100% }
+  </style>
 </head>
-
 <body>
-    <canvas id="canvas"></canvas>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
-    <script type="module" src="./PointerLockControls.js"></script>
-    <script type="module" src="./gamemap.js"></script>
+  <canvas id="canvas"></canvas>
     <script type="module">
-        const game = new GameMap();
-        // Add event listeners for keydown and keyup events
-        document.addEventListener('keydown', handleKeyDown);
-        document.addEventListener('keyup', handleKeyUp);
-
-        // Variables to track user movement
-        let moveForward = false;
-        let moveBackward = false;
-        let moveLeft = false;
-        let moveRight = false;
-
-        // Handle keydown event for user movement
-        function handleKeyDown(event) {
-            switch (event.code) {
-                case 'KeyW': // Move forward
-                    moveForward = true;
-                    break;
-                case 'KeyS': // Move backward
-                    moveBackward = true;
-                    break;
-                case 'KeyA': // Move left
-                    moveLeft = true;
-                    break;
-                case 'KeyD': // Move right
-                    moveRight = true;
-                    break;
-            }
-        }
-
-        // Handle keyup event for user movement
-        function handleKeyUp(event) {
-            switch (event.code) {
-                case 'KeyW': // Stop moving forward
-                    moveForward = false;
-                    break;
-                case 'KeyS': // Stop moving backward
-                    moveBackward = false;
-                    break;
-                case 'KeyA': // Stop moving left
-                    moveLeft = false;
-                    break;
-                case 'KeyD': // Stop moving right
-                    moveRight = false;
-                    break;
-            }
-        }
-
-        // Update user position based on movement controls
-        function updateCharacterPosition() {
-            if (moveForward) {
-                // Move the user forward along the camera's direction
-                character.position.x += Math.sin(camera.rotation.y) * character.velocity;
-                character.position.z -= Math.cos(camera.rotation.y) * character.velocity;
-            }
-            if (moveBackward) {
-                // Move the user backward along the camera's direction
-                character.position.x -= Math.sin(camera.rotation.y) * character.velocity;
-                character.position.z += Math.cos(camera.rotation.y) * character.velocity;
-            }
-            if (moveLeft) {
-                // Move the user to the left relative to the camera's direction
-                character.position.x -= Math.sin(camera.rotation.y + Math.PI / 2) * character.velocity;
-                character.position.z += Math.cos(camera.rotation.y + Math.PI / 2) * character.velocity;
-            }
-            if (moveRight) {
-                // Move the user to the right relative to the camera's direction
-                character.position.x += Math.sin(camera.rotation.y + Math.PI / 2) * character.velocity;
-                character.position.z -= Math.cos(camera.rotation.y + Math.PI / 2) * character.velocity;
-            }
-        }
-
-        // Call the updateCharacterPosition function in the render loop
-        function render() {
-            // Update the camera's position and rotation based on user input
-            controls.update();
-
-            // Update the user's position based on movement controls
-            updateCharacterPosition();
-
-            // Render the scene with the updated camera
-            renderer.render(scene, camera);
-
-            // Call the render function again on the next frame
-            requestAnimationFrame(render);
-        }
-        game.draw();
-        render();
-    </script>
+    import * as THREE from './three.module.js';
+    import HumanInterfaceDevice from './humaninterfacedevice.js';
+    import GameMap from './gamemap.js';
+    const gameMap = new GameMap('canvas');
+    gameMap.animate();
+  </script>
 </body>
-
 </html>

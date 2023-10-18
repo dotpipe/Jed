@@ -1,11 +1,17 @@
+// import * as THREE from './three.module.js';
+// import { PointerLockControls } from './node_modules/three/examples/jsm/controls/PointerLockControls.js';
+// import { Character } from './character.js';
+import HumanInterfaceDevice from './humaninterfacedevice.js';
+import Segment from './Segment.js';
+
 class Wall {
 
-  constructor(startPoint, endPoint, height, width, color, texturepath = "", damage = -1, permeation = 1, curvature = 0) {
+  constructor(startPoint = 0, endPoint = 100, height = 100, width = 100, color = 0x0f0f0f0a, texturepath = "", damage = -1, permeation = 1, curvature = 0) {
     this.scene = new THREE.Scene(); // Create a new scene for each segment
     this.startPoint = startPoint;
     this.endPoint = endPoint;
     this.height = height;
-    this.color = 0xff00ff;
+    this.color = color;
     this.damage = damage;
     this.entrances = [];
     this.dimensions = { height, height };
@@ -24,6 +30,31 @@ class Wall {
     this.geometry = new THREE.BufferGeometry().setFromPoints(points);
     this.mesh = new THREE.Line(this.geometry, this.material);
   }
+
+  makeFloor() {
+    const floorStartPoint = new THREE.Vector3(0, 0, 0);
+    const floorEndPoint = new THREE.Vector3(10, 0, 10);
+    const floorHeight = 0;
+    const floorWidth = 10;
+    const floorColor = 0x00ff00; // Green
+    const floorTexturePath = ""; // Add texture path if needed
+
+    const floor = new Wall(floorStartPoint, floorEndPoint, floorHeight, floorWidth, floorColor, floorTexturePath);
+    floor.mesh.rotation.x = Math.PI / 2; // Rotate the floor 90 degrees around the x-axis
+  }
+  
+  makeCeiling() {
+    const ceilingStartPoint = new THREE.Vector3(0, 10, 0);
+    const ceilingEndPoint = new THREE.Vector3(10, 10, 10);
+    const ceilingHeight = 0;
+    const ceilingWidth = 10;
+    const ceilingColor = 0x0000ff; // Blue
+    const ceilingTexturePath = ""; // Add texture path if needed
+
+    const ceiling = new Wall(ceilingStartPoint, ceilingEndPoint, ceilingHeight, ceilingWidth, ceilingColor, ceilingTexturePath);
+    ceiling.mesh.rotation.x = -Math.PI / 2; // Rotate the ceiling -90 degrees around the x-axis
+  }
+
   createScene() {
     this.scene = new THREE.Scene(); // Create a new scene for each segment
 
