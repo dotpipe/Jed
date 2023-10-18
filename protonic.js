@@ -1,3 +1,4 @@
+import * as THREE from './three.module.js';
 class Protonic {
     constructor(strands, radius, kerning, color, movementType, speed) {
         this.strands = strands;
@@ -105,3 +106,5 @@ class Protonic {
         this.position += this.speed;
     }
 }
+
+export default Protonic;

@@ -4,7 +4,7 @@ import HumanInterfaceDevice from './humaninterfacedevice.js';
 import Segment from './segment.js';
 import Wall from './wall.js';
 import { OrbitControls } from './orbitcontrols.js';
-
+import Protonic from './protonic.js';
 class GameMap {
 
   constructor(canvasId) {
@@ -42,6 +42,7 @@ class GameMap {
     this.cameraRotationY = 0;
     this.cameraRotationZ = 0;
     this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
+    this.protonic = new Protonic(10, 0.5, 0.1, 0xff0000, 'linear', 0.05);
     this.animate();
   }
 
@@ -200,6 +201,10 @@ class GameMap {
         break;
       case 'KeyD': // Move right
         moveRight = true;
+        break;
+      case 'Space': // Spacebar
+        this.protonic = new Protonic(10, 0.5, 0.1, 0xff0000, 'linear', 0.05);
+        this.protonic.draw(this.scene);
         break;
     }
   }
