@@ -4,6 +4,8 @@ import { Character } from './character.js';
 import HumanInterfaceDevice from './humaninterfacedevice.js';
 import Segment from './Segment.js';
 import Wall from './wall.js';
+import { OrbitControls } from './orbitcontrols.js';
+
 class GameMap {
 
   constructor(canvasId) {
@@ -13,8 +15,8 @@ class GameMap {
     this.layers = [];
     this.xAxis = 0; // X axis
     this.yAxis = 0; // Y axis
-    this.zAxis = 0; // Z axis
-    this.position = [ x => this.xAxis, y => this.yAxis, z => this.zAxis ]; 
+    this.zAxis = -25; // Z axis
+    this.position = [x => this.xAxis, y => this.yAxis, z => this.zAxis];
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, highperformance: true }); // Initialize the renderer
     // Initialize camera
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -30,7 +32,7 @@ class GameMap {
     this.targetZ = 0;
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     document.addEventListener('keyup', this.handleKeyUp.bind(this));
-    this.character = new Character("Me", [0, 0, 0], 100, 0.1);
+    this.character = new Character("Me", [0, 0, 0], 100, 0.01);
     this.scene = new THREE.Scene();
     const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     this.segmentObject = new Segment(0, 10, wallMaterial, this.scene);
@@ -39,58 +41,103 @@ class GameMap {
     this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
     this.animate();
   }
-  
+
   checkCollision(camera) {
     const cameraPosition = camera.position;
-    const distanceThreshold = 0.1;
-  
+    const distanceThreshold = 0.05;
+
     let closestWall = null;
-    let closestDistance = Infinity;
-  
+    let closestDistanceX = Infinity;
+    let closestDistanceY = Infinity;
+    let closestDistanceZ = Infinity;
+
     // Iterate over all walls and find the closest one
     for (const wall of this.segments) {
       const wallPosition = wall.position;
       const distanceX = Math.abs(cameraPosition.x - wallPosition.x);
+      const distanceY = Math.abs(cameraPosition.y - wallPosition.y);
       const distanceZ = Math.abs(cameraPosition.z - wallPosition.z);
-      const distance = Math.sqrt(distanceX * distanceX + distanceZ * distanceZ);
-  
-      if (distance < closestDistance) {
-        closestWall = wall;
-        closestDistance = distance;
-      }
-    }
-  
-    if (closestWall && closestDistance < distanceThreshold) {
       const movementDirection = camera.getWorldDirection(new THREE.Vector3());
-  
-      // Calculate the correction vector to move the camera away from the wall
-      const correctionDistance = distanceThreshold - closestDistance;
-      const correction = movementDirection.clone().multiplyScalar(correctionDistance);
-  
-      // Move the camera away from the wall
-      camera.position.add(correction);
-  
-      // Disable movement in the direction of the closest wall
-      if (movementDirection.x > 0) {
-        camera.moveRight = false;
-      } else if (movementDirection.x < 0) {
-        camera.moveLeft = false;
+      // Check if any of the axes are infringed upon
+      if (distanceX < distanceThreshold || distanceY < distanceThreshold || distanceZ < distanceThreshold) {
+        // Calculate the movement direction vector
+        const movementDirection = camera.getWorldDirection(new THREE.Vector3());
+
+        // Calculate the correction vector to move the camera away from the wall
+        const correctionX = movementDirection.x * Math.max(distanceThreshold - distanceX, 0);
+        const correctionY = movementDirection.y * Math.max(distanceThreshold - distanceY, 0);
+        const correctionZ = movementDirection.z * Math.max(distanceThreshold - distanceZ, 0);
+
+        // Move the camera away from the wall
+        camera.position.add(new THREE.Vector3(correctionX, correctionY, correctionZ));
+
+        // Disable movement in the direction of the closest wall
+        if (movementDirection.x > 0 && distanceX < distanceY && distanceX < distanceZ) {
+          camera.moveLeft = false;
+        } else if (movementDirection.x < 0 && distanceX < distanceY && distanceX < distanceZ) {
+          camera.moveRight = false;
+        }
+
+        if (movementDirection.y > 0 && distanceY < distanceX && distanceY < distanceZ) {
+          camera.moveDown = false;
+        } else if (movementDirection.y < 0 && distanceY < distanceX && distanceY < distanceZ) {
+          camera.moveUp = false;
+        }
+
+        if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
+          camera.moveBackward = false;
+        } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
+          camera.moveForward = false;
+        }
+        // Camera is encroaching the wall, prevent movement further
+        return;
       }
-  
-      if (movementDirection.z > 0) {
-        camera.moveForward = false;
-      } else if (movementDirection.z < 0) {
+
+      // Update the closest distance for each axis
+      closestDistanceX = Math.min(closestDistanceX, distanceX);
+      closestDistanceY = Math.min(closestDistanceY, distanceY);
+      closestDistanceZ = Math.min(closestDistanceZ, distanceZ);
+
+      if (distanceX < closestDistanceX || distanceY < closestDistanceY || distanceZ < closestDistanceZ) {
+        closestWall = wall;
+        closestDistanceX = distanceX;
+        closestDistanceY = distanceY;
+        closestDistanceZ = distanceZ;
+      }
+      if (
+        (distanceX < distanceThreshold || distanceY < distanceThreshold || distanceZ < distanceThreshold) &&
+        (cameraPosition.x >= wallPosition.x && cameraPosition.x <= wallPosition.x + wall.width) &&
+        (cameraPosition.y >= wallPosition.y && cameraPosition.y <= wallPosition.y + wall.height) &&
+        (cameraPosition.z >= wallPosition.z && cameraPosition.z <= wallPosition.z + wall.depth)
+      ) {
+      // if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
         camera.moveBackward = false;
+      } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
+        camera.moveForward = false;
       }
+
+      // Camera is encroaching the wall, prevent movement further
+      return;
     }
-  
+
+    // Update the closest distance for each axis
+    closestDistanceX = Math.min(closestDistanceX, distanceX);
+    closestDistanceY = Math.min(closestDistanceY, distanceY);
+    closestDistanceZ = Math.min(closestDistanceZ, distanceZ);
+
+    if (distanceX < closestDistanceX || distanceY < closestDistanceY || distanceZ < closestDistanceZ) {
+      closestWall = wall;
+      closestDistanceX = distanceX;
+      closestDistanceY = distanceY;
+      closestDistanceZ = distanceZ;
+    }
     // Handle mouse movements for camera look
     const mouseMovementX = camera.rotation.x; /* get mouse movement in X direction */
     const mouseMovementY = camera.rotation.y;/* get mouse movement in Y direction */
-  
+
     // Adjust camera rotation based on mouse movements
-    camera.rotation.y -= mouseMovementX * 0.002; // Adjust the rotation speed as needed
-    camera.rotation.x -= mouseMovementY * 0.002; // Adjust the rotation speed as needed
+    camera.rotation.y -= mouseMovementX * 0.02; // Adjust the rotation speed as needed
+    camera.rotation.x -= mouseMovementY * 0.02; // Adjust the rotation speed as needed
   }
 
   loadSegments() {
@@ -334,6 +381,8 @@ class GameMap {
         segment.isLoaded = true;
       }
     }
+    const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    controls.update(); // Update the controls
     this.checkCollision(this.camera);
     const delta = this.hid.clock.getDelta();
     this.hid.update(delta);

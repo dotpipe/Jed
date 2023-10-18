@@ -20,7 +20,7 @@ class Wall {
     this.curvature = curvature;
     this.loader = new THREE.TextureLoader();
     this.texture = this.loader.load(texturepath) || null;
-    this.geometry = new THREE.BoxGeometry(1, 1, 1);
+    this.geometry = new THREE.BoxGeometry(0.1, 1, 1);
     this.material = new THREE.MeshLambertMaterial({ color: this.color });
     const curve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(this.startPoint.x, this.startPoint.y, this.startPoint.z),
