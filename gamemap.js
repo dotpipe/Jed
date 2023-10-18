@@ -5,7 +5,7 @@ import Segment from './segment.js';
 import Wall from './wall.js';
 import { OrbitControls } from './orbitcontrols.js';
 import Protonic from './protonic.js';
-import { Room } from './room.js';
+// import { Room } from './room.js';
 
 class GameMap {
 
@@ -36,7 +36,7 @@ class GameMap {
     this.character = new Character("Me", [0, 0, 0], 100, 0.01);
     this.scene = new THREE.Scene();
     const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    this.segmentObject = new Segment(0, 10, wallMaterial, this.scene);
+    this.segmentObject = new Segment(0, 10, wallMaterial, this.scene, 0, 0.3);
     this.segments = this.segmentObject.createWalls();
     // Initialize HumanInterfaceDevice
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -46,13 +46,13 @@ class GameMap {
     this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
     this.protonic = new Protonic(10, 0.5, 0.1, 0xff0000, 'linear', 0.05);
     this.protonic.setTransformedPosition(this.position.x, this.position.y, this.position.z);
-    this.room = new Room();
+    // this.room = new Room();
     this.animate();
   }
 
   checkCollision(camera) {
     // const cameraPosition = camera.position;
-    const distanceThreshold = 0.7;
+    const distanceThreshold = 0.3;
 
     let closestWall = null;
     let closestDistanceX = Infinity;
@@ -153,43 +153,12 @@ class GameMap {
     // Handle mouse movements for camera look
     const mouseMovementX = camera.rotation.x; /* get mouse movement in X direction */
     const mouseMovementY = camera.rotation.y;/* get mouse movement in Y direction */
+    const mouseMovementZ = camera.rotation.z;/* get mouse movement in Y direction */
 
     // Adjust camera rotation based on mouse movements
-    camera.rotation.y -= mouseMovementX * 0.02; // Adjust the rotation speed as needed
-    camera.rotation.x -= mouseMovementY * 0.02; // Adjust the rotation speed as needed
-  }
-
-  loadSegments() {
-    // Get the current position of the player
-    const playerPosition = character.position;
-
-    // Iterate over the array of segments
-    for (const segment of this.segments) {
-      // Check if the player has crossed into the segment
-      if (this.isPlayerInSegment(playerPosition, segment)) {
-        // Draw the walls of the segment
-        segment.draw();
-      }
-    }
-  }
-
-  isPlayerInSegment(playerPosition, segments) {
-    // Check if the player's position is within the segment's boundaries
-    const startX = segments.startPoint;
-    const startY = segments.startPoint;
-    const startZ = segments.startPoint;
-    const endX = segments.endPoint;
-    const endY = segments.endPoint;
-    const endZ = segments.endPoint;
-
-    return (
-      playerPosition.x >= startX &&
-      playerPosition.x <= endX &&
-      playerPosition.y >= startY &&
-      playerPosition.y <= endY &&
-      playerPosition.z >= startZ &&
-      playerPosition.z <= endZ
-    );
+    camera.rotation.z -= mouseMovementZ * 0.02; // Adjust the rotation speed as needed
+    camera.rotation.y -= mouseMovementY * 0.02; // Adjust the rotation speed as needed
+    camera.rotation.x -= mouseMovementX * 0.02; // Adjust the rotation speed as needed
   }
 
   handleKeyDown(event) {
@@ -230,18 +199,6 @@ class GameMap {
     }
   }
 
-  addLayer(color) {
-    this.layers.push({
-      color,
-      walls: [],
-    });
-  }
-
-  addWall(layerIndex, startPoint, endPoint, height, color) {
-    const wall = new Wall(startPoint, endPoint, height, color);
-    this.layers[layerIndex].walls.push(wall);
-  }
-
   handleMouseMove(event) {
     // Assuming that the `controls` instance of the `PointerLockControls` class is stored in the `hid` property
     if (this.hid.controls.isLocked) {
@@ -267,7 +224,7 @@ class GameMap {
     this.clock = new THREE.Clock();
     // Create a THREE.js scene, camera, and renderer
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, this.canvas.width / this.canvas.height, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(75, 0, 0.1, 1000);
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
     this.hid = new HumanInterfaceDevice(this.camera, this.renderer.domElement);
     // Set up camera position and controls
@@ -336,53 +293,16 @@ class GameMap {
     this.animate();
     document.addEventListener('mousemove', (event) => {
       const mouseSpeed = 0.00002;
-      this.cameraRotationX -= event.movementY * mouseSpeed;
-      // this.cameraRotationY -= event.movementX * mouseSpeed;
+      this.cameraRotationY -= event.movementY * mouseSpeed;
+      this.cameraRotationX -= event.movementX * mouseSpeed;
       this.cameraRotationZ -= event.movementZ * mouseSpeed;
+      this.camera.position.set(this.cameraRotationX, this.cameraRotationY, this.cameraRotationZ);
+      // this.controls = new PointerLockControls(this.camera, this.canvas);
+      this.scene.add(this.controls.getObject());
     });
   }
 
-  render() {
-    // this.renderer.clear();
-
-    // Set the background color to red
-    this.renderer.setClearColor(0xff0000);
-
-    // Render the scene with the camera
-    this.renderer.render(this.scene, this.camera);
-
-    // Set the background color to blue
-    // this.renderer.setClearColor(0x0000ff);
-
-    // Render the scene again with the camera
-    // this.renderer.render(this.scene, this.camera);
-  }
-
-  createSegments() {
-    const segments = [];
-    const wallGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-
-    for (let i = 0; i < 5; i++) {
-      const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-      wall.position.set(i * 2 - 10, 0, 0); // Position the walls along the x-axis
-      this.segments.push(wall);
-    }
-
-    // Create the ceiling
-    const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const ceilingGeometry = new THREE.BoxGeometry(10, 0.1, 10);
-    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    ceiling.position.set(0, 1, 0); // Position the walls along the x-axis
-    this.segments.add(ceiling);
-
-    // Create the floor
-    const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const floorGeometry = new THREE.BoxGeometry(10, 0.1, 10, 10, 10, 10);
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.position.set(0, 1, 0); // Position the walls along the x-axis
-    this.segments.add(floor);
-  }
+  // Create Segments with Segment.js
 
   animate() {
     // Get the current position of the player
@@ -405,20 +325,11 @@ class GameMap {
       this.hid.controls.moveRight(moveSpeed);
     }
 
-    // Check if the player has crossed into a new segment
-    // Assuming segments is defined in this class
-    // for (const segment of this.segments) {
-    //   if (this.isPlayerInSegment(playerPosition, segment) && !segment.isLoaded) {
-    //     segment.draw();
-    //     segment.isLoaded = true;
-    //   }
-    // }
-    // this.updateCharacterPosition();
     // Update camera rotation based on mouse movement
     this.camera.rotation.x = this.cameraRotationX * 0.2;
     this.camera.rotation.y = this.cameraRotationY * 0.2;
     this.camera.rotation.z = this.cameraRotationZ * 0.2;
-
+    this.controls.target = new THREE.Vector3(this.camera.rotation.x, this.camera.rotation.y, this.camera.rotation.z);
     this.controls.update(); // Update the controls
 
     this.protonic.setTransformedPosition(this.camera.position.x, this.camera.position.y, this.camera.position.z);
@@ -440,16 +351,16 @@ class GameMap {
     const cameraRight = right.clone().applyQuaternion(this.camera.quaternion);
 
     if (keyboardControls.ArrowUp) {
-      character.position.add(cameraDirection.multiplyScalar(-speed));
+      this.character.position.add(cameraDirection.multiplyScalar(-speed));
     }
     if (keyboardControls.ArrowDown) {
-      character.position.add(cameraDirection.multiplyScalar(speed));
+      this.character.position.add(cameraDirection.multiplyScalar(speed));
     }
     if (keyboardControls.ArrowLeft) {
-      character.position.add(cameraRight.multiplyScalar(-speed));
+      this.character.position.add(cameraRight.multiplyScalar(-speed));
     }
     if (keyboardControls.ArrowRight) {
-      character.position.add(cameraRight.multiplyScalar(speed));
+      this.character.position.add(cameraRight.multiplyScalar(speed));
     }
   }
 }

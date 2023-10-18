@@ -1,23 +1,20 @@
-import Wall from "./wall";
+import Wall from "./wall.js";
 
-class Column extends Wall {
-    constructor(positionX, positionY, width, height) {
-      this.position = { x: positionX, y: positionY };
-      this.width = width;
+class Column {
+    constructor(height, radius, material = 0x00ff00) {
+      // this.position = { x: positionX, y: positionY };
+      // this.width = width;
       this.height = height;
+      this.columns = [];
+      this.radius = radius;
     }
-  
-    toJSON() {
-      return {
-        position: this.position,
-        width: this.width,
-        height: this.height,
-      };
+
+    addColumn() {
+      this.geometry = new THREE.CylinderGeometry(this.radius, this.radius, 0.45, 32);
+      const column = new THREE.Mesh(geometry, material);
+      this.walls.push(column);
+      return this.columns;
     }
-  
-    static fromJSON(json) {
-      return new Column(json.position.x, json.position.y, json.width, json.height);
-    }
-  }
+}
   
 export default Column;

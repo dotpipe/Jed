@@ -1,23 +1,32 @@
+import Column from './column.js';
 import { Room } from './room.js';
 import * as THREE from './three.module.js';
 
 class Segment {
-  constructor(startPoint, endPoint, material, scene) {
+  constructor(startPoint, endPoint, material, scene, style = 1, radius = 1) {
     this.startPoint = startPoint;
     this.endPoint = endPoint;
     this.material = material;
+    this.wall;
     this.walls = [];
     this.isLoaded = false;
+    this.style = style;
+    this.radius = radius;
+    this.wallGeometry;
     this.createWalls();
   }
 
   createWalls() {
-    const wallGeometry = new THREE.BoxGeometry(1, 1, 1, 1, 1, 1);
-
+    const column = new Column(1,0.5);
+    this.wallGeometry = new THREE.BoxGeometry(1, 1, 1, 1, 1, 1);
+    const COLUMN = 0;
     for (let i = this.startPoint; i < this.endPoint; i++) {
-      const wall = new THREE.Mesh(wallGeometry, this.material);
-      wall.position.set(i * 5 - 10, 0, 0); // Position the walls along the x-axis
-      this.walls.push(wall);
+      if (COLUMN == this.style) {
+        this.wallGeometry = new THREE.CylinderGeometry(this.radius, this.radius, 1, 32);
+      }
+      this.wall = new THREE.Mesh(this.wallGeometry, this.material);
+      this.wall.position.set(i * 2 - 10, 0, 0); // Position the walls along the x-axis
+      this.walls.push(this.wall);
     }
 
     // Create the ceiling
