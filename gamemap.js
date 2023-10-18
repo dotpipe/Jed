@@ -1,5 +1,4 @@
 import * as THREE from './three.module.js';
-// import { PointerLockControls } from './node_modules/three/examples/jsm/controls/PointerLockControls.js';
 import { Character } from './character.js';
 import HumanInterfaceDevice from './humaninterfacedevice.js';
 import Segment from './Segment.js';
@@ -43,7 +42,7 @@ class GameMap {
   }
 
   checkCollision(camera) {
-    const cameraPosition = camera.position;
+    // const cameraPosition = camera.position;
     const distanceThreshold = 0.05;
 
     let closestWall = null;
@@ -54,6 +53,7 @@ class GameMap {
     // Iterate over all walls and find the closest one
     for (const wall of this.segments) {
       const wallPosition = wall.position;
+      const cameraPosition = camera.position;
       const distanceX = Math.abs(cameraPosition.x - wallPosition.x);
       const distanceY = Math.abs(cameraPosition.y - wallPosition.y);
       const distanceZ = Math.abs(cameraPosition.z - wallPosition.z);
@@ -110,12 +110,11 @@ class GameMap {
         (cameraPosition.y >= wallPosition.y && cameraPosition.y <= wallPosition.y + wall.height) &&
         (cameraPosition.z >= wallPosition.z && cameraPosition.z <= wallPosition.z + wall.depth)
       ) {
-      // if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
+        // if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
         camera.moveBackward = false;
       } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
         camera.moveForward = false;
       }
-
       // Camera is encroaching the wall, prevent movement further
       return;
     }
@@ -336,8 +335,26 @@ class GameMap {
     // Set up renderer
     this.renderer.setSize(this.canvas.width, this.canvas.height);
 
+    this.render();
+
     // Render the scene and update it in a loop
     this.animate();
+  }
+
+  render() {
+    this.renderer.clear();
+
+    // Set the background color to red
+    this.renderer.setClearColor(0xff0000);
+
+    // Render the scene with the camera
+    this.renderer.render(this.scene, this.camera);
+
+    // Set the background color to blue
+    this.renderer.setClearColor(0x0000ff);
+
+    // Render the scene again with the camera
+    this.renderer.render(this.scene, this.camera);
   }
 
   createSegments() {
@@ -381,6 +398,7 @@ class GameMap {
         segment.isLoaded = true;
       }
     }
+    this.render();
     const controls = new OrbitControls(this.camera, this.renderer.domElement);
     controls.update(); // Update the controls
     this.checkCollision(this.camera);

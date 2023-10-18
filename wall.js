@@ -1,6 +1,3 @@
-// import * as THREE from './three.module.js';
-// import { PointerLockControls } from './node_modules/three/examples/jsm/controls/PointerLockControls.js';
-// import { Character } from './character.js';
 import HumanInterfaceDevice from './humaninterfacedevice.js';
 import Segment from './Segment.js';
 
