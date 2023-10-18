@@ -31,7 +31,6 @@
         camera.position.set(0, 0, 5);
 
         // Create a renderer and set its size
-        // Create a renderer and set its size
         const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('myCanvas') });
         renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -94,6 +93,7 @@
             cameraRotationX -= event.movementY * mouseSpeed;
             cameraRotationY -= event.movementX * mouseSpeed;
         });
+
         function updateCharacterPosition() {
             const speed = 0.1;
 

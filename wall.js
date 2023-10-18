@@ -1,5 +1,5 @@
 import HumanInterfaceDevice from './humaninterfacedevice.js';
-import Segment from './Segment.js';
+import Segment from './segment.js';
 
 class Wall {
 

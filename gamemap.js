@@ -1,7 +1,7 @@
 import * as THREE from './three.module.js';
 import { Character } from './character.js';
 import HumanInterfaceDevice from './humaninterfacedevice.js';
-import Segment from './Segment.js';
+import Segment from './segment.js';
 import Wall from './wall.js';
 import { OrbitControls } from './orbitcontrols.js';
 
@@ -43,7 +43,7 @@ class GameMap {
 
   checkCollision(camera) {
     // const cameraPosition = camera.position;
-    const distanceThreshold = 0.05;
+    const distanceThreshold = 0.7;
 
     let closestWall = null;
     let closestDistanceX = Infinity;
@@ -69,25 +69,36 @@ class GameMap {
         const correctionZ = movementDirection.z * Math.max(distanceThreshold - distanceZ, 0);
 
         // Move the camera away from the wall
-        camera.position.add(new THREE.Vector3(correctionX, correctionY, correctionZ));
+        camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
 
         // Disable movement in the direction of the closest wall
         if (movementDirection.x > 0 && distanceX < distanceY && distanceX < distanceZ) {
           camera.moveLeft = false;
+          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
         } else if (movementDirection.x < 0 && distanceX < distanceY && distanceX < distanceZ) {
           camera.moveRight = false;
+          
+          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
         }
 
         if (movementDirection.y > 0 && distanceY < distanceX && distanceY < distanceZ) {
           camera.moveDown = false;
+          
+          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
         } else if (movementDirection.y < 0 && distanceY < distanceX && distanceY < distanceZ) {
           camera.moveUp = false;
+          
+          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
         }
 
         if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
           camera.moveBackward = false;
+          
+          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
         } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
           camera.moveForward = false;
+          
+          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
         }
         // Camera is encroaching the wall, prevent movement further
         return;

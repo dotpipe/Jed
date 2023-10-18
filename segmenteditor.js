@@ -1,5 +1,5 @@
 import * as THREE from "./three.module.js";
-import Segment from "./Segment.js";
+import Segment from "./segment.js";
 import Wall from "./wall.js";
 import Entrance from "./entrance.js";
 import Column from "./column.js";
