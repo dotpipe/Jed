@@ -37,6 +37,10 @@ class GameMap {
     this.segmentObject = new Segment(0, 10, wallMaterial, this.scene);
     this.segments = this.segmentObject.createWalls();
     // Initialize HumanInterfaceDevice
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.cameraRotationX = 0;
+    this.cameraRotationY = 0;
+    this.cameraRotationZ = 0;
     this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
     this.animate();
   }
@@ -74,31 +78,31 @@ class GameMap {
         // Disable movement in the direction of the closest wall
         if (movementDirection.x > 0 && distanceX < distanceY && distanceX < distanceZ) {
           camera.moveLeft = false;
-          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
+          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
         } else if (movementDirection.x < 0 && distanceX < distanceY && distanceX < distanceZ) {
           camera.moveRight = false;
-          
-          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
+
+          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
         }
 
         if (movementDirection.y > 0 && distanceY < distanceX && distanceY < distanceZ) {
           camera.moveDown = false;
-          
-          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
+
+          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
         } else if (movementDirection.y < 0 && distanceY < distanceX && distanceY < distanceZ) {
           camera.moveUp = false;
-          
-          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
+
+          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
         }
 
         if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
           camera.moveBackward = false;
-          
-          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
+
+          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
         } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
           camera.moveForward = false;
-          
-          camera.position.add(new THREE.Vector3(correctionX,  0, correctionZ));
+
+          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
         }
         // Camera is encroaching the wall, prevent movement further
         return;
@@ -350,6 +354,12 @@ class GameMap {
 
     // Render the scene and update it in a loop
     this.animate();
+    document.addEventListener('mousemove', (event) => {
+      const mouseSpeed = 0.00002;
+      this.cameraRotationX -= event.movementY * mouseSpeed;
+      // this.cameraRotationY -= event.movementX * mouseSpeed;
+      this.cameraRotationZ -= event.movementZ * mouseSpeed;
+    });
   }
 
   render() {
@@ -409,9 +419,13 @@ class GameMap {
         segment.isLoaded = true;
       }
     }
+    // this.updateCharacterPosition();
+    // Update camera rotation based on mouse movement
+    // this.camera.rotation.x = this.cameraRotationX * 0.00002;
+    this.camera.rotation.z = this.cameraRotationZ * 0.0000;
+
     this.render();
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
-    controls.update(); // Update the controls
+    this.controls.update(); // Update the controls
     this.checkCollision(this.camera);
     const delta = this.hid.clock.getDelta();
     this.hid.update(delta);
@@ -426,8 +440,8 @@ class GameMap {
     const forward = new THREE.Vector3(0, 0, -1);
     const right = new THREE.Vector3(1, 0, 0);
 
-    const cameraDirection = forward.clone().applyQuaternion(camera.quaternion);
-    const cameraRight = right.clone().applyQuaternion(camera.quaternion);
+    const cameraDirection = forward.clone().applyQuaternion(this.camera.quaternion);
+    const cameraRight = right.clone().applyQuaternion(this.camera.quaternion);
 
     if (keyboardControls.ArrowUp) {
       character.position.add(cameraDirection.multiplyScalar(-speed));
