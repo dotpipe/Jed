@@ -14,7 +14,7 @@ class GameMap {
     this.canvas = document.getElementById('canvas');
     // this.gl = this.canvas.getContext('webgl');
     this.layers = [];
-    this.xAxis = 0; // X axis
+    this.xAxis = -90; // X axis
     this.yAxis = 0; // Y axis
     this.zAxis = -25; // Z axis
     this.position = [x => this.xAxis, y => this.yAxis, z => this.zAxis];
@@ -78,37 +78,38 @@ class GameMap {
         const correctionZ = movementDirection.z * Math.max(distanceThreshold - distanceZ, 0);
 
         // Move the camera away from the wall
-        camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
+
 
         // Disable movement in the direction of the closest wall
         if (movementDirection.x > 0 && distanceX < distanceY && distanceX < distanceZ) {
           camera.moveLeft = false;
-          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
+
         } else if (movementDirection.x < 0 && distanceX < distanceY && distanceX < distanceZ) {
           camera.moveRight = false;
 
-          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
+
         }
 
         if (movementDirection.y > 0 && distanceY < distanceX && distanceY < distanceZ) {
           camera.moveDown = false;
 
-          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
+
         } else if (movementDirection.y < 0 && distanceY < distanceX && distanceY < distanceZ) {
           camera.moveUp = false;
 
-          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
+
         }
 
         if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
           camera.moveBackward = false;
 
-          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
+
         } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
           camera.moveForward = false;
 
-          camera.position.add(new THREE.Vector3(correctionX, 0, correctionZ));
+
         }
+        camera.position.add(new THREE.Vector3(correctionX, correctionY, correctionZ));
         // Camera is encroaching the wall, prevent movement further
         return;
       }
@@ -164,19 +165,19 @@ class GameMap {
   handleKeyDown(event) {
     switch (event.code) {
       case 'KeyW': // Move forward
-        moveForward = true;
+        this.moveForward = true;
         break;
       case 'KeyS': // Move backward
-        moveBackward = true;
+        this.moveBackward = true;
         break;
       case 'KeyA': // Move left
-        moveLeft = true;
+        this.moveLeft = true;
         break;
       case 'KeyD': // Move right
-        moveRight = true;
+        this.moveRight = true;
         break;
       case 'Space': // Spacebar
-        this.protonic = new Protonic(6, 0.5, 0.1, 0xff0000, 'bouncing', 0.05);
+        this.protonic = new Protonic(6, 0.5, 0.1, 0xff0000, 'bouncing', 0.25);
         this.protonic.draw(this.scene);
         break;
     }
@@ -185,16 +186,16 @@ class GameMap {
   handleKeyUp(event) {
     switch (event.code) {
       case 'KeyW': // Stop moving forward
-        moveForward = false;
+        this.moveForward = false;
         break;
       case 'KeyS': // Stop moving backward
-        moveBackward = false;
+        this.moveBackward = false;
         break;
       case 'KeyA': // Stop moving left
-        moveLeft = false;
+        this.moveLeft = false;
         break;
       case 'KeyD': // Stop moving right
-        moveRight = false;
+        this.moveRight = false;
         break;
     }
   }
@@ -288,7 +289,7 @@ class GameMap {
     this.renderer.setSize(this.canvas.width, this.canvas.height);
 
     // this.render();
-
+    this.controls.autoRotate();
     // Render the scene and update it in a loop
     this.animate();
     document.addEventListener('mousemove', (event) => {
@@ -297,7 +298,6 @@ class GameMap {
       this.cameraRotationX -= event.movementX * mouseSpeed;
       this.cameraRotationZ -= event.movementZ * mouseSpeed;
       this.camera.position.set(this.cameraRotationX, this.cameraRotationY, this.cameraRotationZ);
-      // this.controls = new PointerLockControls(this.camera, this.canvas);
       this.scene.add(this.controls.getObject());
     });
   }
@@ -307,7 +307,7 @@ class GameMap {
   animate() {
     // Get the current position of the player
     // Assuming character is a global object or it's defined in this class
-    const playerPosition = this.character.position;
+    // const playerPosition = this.character.position;
 
     const moveSpeed = 0.1;
 
@@ -325,13 +325,10 @@ class GameMap {
       this.hid.controls.moveRight(moveSpeed);
     }
 
-    // Update camera rotation based on mouse movement
-    this.camera.rotation.x = this.cameraRotationX * 0.2;
-    this.camera.rotation.y = this.cameraRotationY * 0.2;
-    this.camera.rotation.z = this.cameraRotationZ * 0.2;
-    this.controls.target = new THREE.Vector3(this.camera.rotation.x, this.camera.rotation.y, this.camera.rotation.z);
-    this.controls.update(); // Update the controls
 
+    this.camera.rotateX(this.cameraRotationX);
+    this.camera.rotateY(this.cameraRotationY);
+    this.camera.rotateZ(this.cameraRotationZ);
     this.protonic.setTransformedPosition(this.camera.position.x, this.camera.position.y, this.camera.position.z);
     this.checkCollision(this.camera);
     const delta = this.hid.clock.getDelta();

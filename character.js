@@ -182,9 +182,9 @@ class Character {
     }
 
     calculateDistance(obj) {
-        const dx = obj.x - this.userView.x;
-        const dy = obj.y - this.userView.y;
-        const dz = obj.z - this.userView.z;
+        const dx = obj.x - this.position.x;
+        const dy = obj.y - this.position.y;
+        const dz = obj.z - this.position.z;
 
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
