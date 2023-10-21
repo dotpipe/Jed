@@ -3,6 +3,7 @@ import * as THREE from './three.module.js';
 
 class HumanInterfaceDevice {
   constructor(camera, domElement) {
+    // this.canvas = document.getElementById(domElement);
     this.controls = new PointerLockControls(camera, domElement);
     this.moveForward = false;
     this.moveBackward = false;

@@ -2,16 +2,17 @@ import * as THREE from './three.module.js';
 import { Character } from './character.js';
 import HumanInterfaceDevice from './humaninterfacedevice.js';
 import Segment from './segment.js';
-import Wall from './wall.js';
+import Walls from './walls.js';
 import { OrbitControls } from './orbitcontrols.js';
 import Protonic from './protonic.js';
-// import { Room } from './room.js';
+import { collisionChecker } from './checkcollision.js';
+import Column from './column.js';
 
 class GameMap {
 
   constructor(canvasId) {
     // Initialize canvas and WebGL context
-    this.canvas = document.getElementById('canvas');
+    this.canvas = document.getElementById(canvasId);
     // this.gl = this.canvas.getContext('webgl');
     this.layers = [];
     this.xAxis = -90; // X axis
@@ -19,6 +20,7 @@ class GameMap {
     this.zAxis = -25; // Z axis
     this.position = [x => this.xAxis, y => this.yAxis, z => this.zAxis];
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, highperformance: true }); // Initialize the renderer
+    this.renderer.shadowMapEnabled = true
     // Initialize camera
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -36,130 +38,29 @@ class GameMap {
     this.character = new Character("Me", [0, 0, 0], 100, 0.01);
     this.scene = new THREE.Scene();
     const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    this.segmentObject = new Segment(0, 10, wallMaterial, this.scene, 0, 0.3);
-    this.segments = this.segmentObject.createWalls();
+    // this.segmentObject = new Segment(0, 10, wallMaterial, this.scene, 0, 0.3);
+    // this.segments; // = this.segmentObject.createWalls();
     // Initialize HumanInterfaceDevice
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.cameraRotationX = 0;
     this.cameraRotationY = 0;
     this.cameraRotationZ = 0;
     this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
-    this.protonic = new Protonic(10, 0.5, 0.1, 0xff0000, 'linear', 0.05);
-    this.protonic.setTransformedPosition(this.position.x, this.position.y, this.position.z);
+    this.protonic; // = new Protonic(this.camera, this.segments, 10, 0.5, 0.1, 0xff0000, 'linear', 0.5);
+    // this.protonic.setTransformedPosition(this.cameraRotationX, this.cameraRotationX, this.cameraRotation);
     // this.room = new Room();
+    // this.collisionCheck = 
+    const url = new THREE.TextureLoader().load('./leafwall.webp');
+    this.wallOptions = [
+      { size: [50, 2.5, 1], wrapS: 2, wrapT: 120, texture: url, yAxis: 0, positions: [0, -1, -5], segments: [1, 1, 1] },
+      { size: [15, 2.5, 20], color: 0xdfffbf, yAxis: 0, positions: [-25, 0, 5], segments: [1, 1, 1] },
+      { size: [50, 2.5, 1], color: 0xafaeec, yAxis: 0, positions: [0, -1, 5], segments: [1, 1, 1] },
+      { size: [15, 2.5, 20], color: 0xafaeec, yAxis: 0, positions: [25, 0, -5], segments: [1, 1, 1] },
+      { size: [100, 2, 30], color: 0x00f300, yAxis: -4, positions: [-75, -1, -5], segments: [1, 1, 1] },
+      { size: [100, 2, 20], color: 0x0000af, yAxis: 3.5, positions: [-100, 2.5, -5], segments: [1, 1, 1] }
+    ];
+    this.segments = new Walls(this.wallOptions);
     this.animate();
-  }
-
-  checkCollision(camera) {
-    // const cameraPosition = camera.position;
-    const distanceThreshold = 0.3;
-
-    let closestWall = null;
-    let closestDistanceX = Infinity;
-    let closestDistanceY = Infinity;
-    let closestDistanceZ = Infinity;
-
-    // Iterate over all walls and find the closest one
-    for (const wall of this.segments) {
-      const wallPosition = wall.position;
-      const cameraPosition = camera.position;
-      const distanceX = Math.abs(cameraPosition.x - wallPosition.x);
-      const distanceY = Math.abs(cameraPosition.y - wallPosition.y);
-      const distanceZ = Math.abs(cameraPosition.z - wallPosition.z);
-      const movementDirection = camera.getWorldDirection(new THREE.Vector3());
-      // Check if any of the axes are infringed upon
-      if (distanceX < distanceThreshold || distanceY < distanceThreshold || distanceZ < distanceThreshold) {
-        // Calculate the movement direction vector
-        const movementDirection = camera.getWorldDirection(new THREE.Vector3());
-
-        // Calculate the correction vector to move the camera away from the wall
-        const correctionX = movementDirection.x * Math.max(distanceThreshold - distanceX, 0);
-        const correctionY = movementDirection.y * Math.max(distanceThreshold - distanceY, 0);
-        const correctionZ = movementDirection.z * Math.max(distanceThreshold - distanceZ, 0);
-
-        // Move the camera away from the wall
-
-
-        // Disable movement in the direction of the closest wall
-        if (movementDirection.x > 0 && distanceX < distanceY && distanceX < distanceZ) {
-          camera.moveLeft = false;
-
-        } else if (movementDirection.x < 0 && distanceX < distanceY && distanceX < distanceZ) {
-          camera.moveRight = false;
-
-
-        }
-
-        if (movementDirection.y > 0 && distanceY < distanceX && distanceY < distanceZ) {
-          camera.moveDown = false;
-
-
-        } else if (movementDirection.y < 0 && distanceY < distanceX && distanceY < distanceZ) {
-          camera.moveUp = false;
-
-
-        }
-
-        if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
-          camera.moveBackward = false;
-
-
-        } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
-          camera.moveForward = false;
-
-
-        }
-        camera.position.add(new THREE.Vector3(correctionX, correctionY, correctionZ));
-        // Camera is encroaching the wall, prevent movement further
-        return;
-      }
-
-      // Update the closest distance for each axis
-      closestDistanceX = Math.min(closestDistanceX, distanceX);
-      closestDistanceY = Math.min(closestDistanceY, distanceY);
-      closestDistanceZ = Math.min(closestDistanceZ, distanceZ);
-
-      if (distanceX < closestDistanceX || distanceY < closestDistanceY || distanceZ < closestDistanceZ) {
-        closestWall = wall;
-        closestDistanceX = distanceX;
-        closestDistanceY = distanceY;
-        closestDistanceZ = distanceZ;
-      }
-      if (
-        (distanceX < distanceThreshold || distanceY < distanceThreshold || distanceZ < distanceThreshold) &&
-        (cameraPosition.x >= wallPosition.x && cameraPosition.x <= wallPosition.x + wall.width) &&
-        (cameraPosition.y >= wallPosition.y && cameraPosition.y <= wallPosition.y + wall.height) &&
-        (cameraPosition.z >= wallPosition.z && cameraPosition.z <= wallPosition.z + wall.depth)
-      ) {
-        // if (movementDirection.z > 0 && distanceZ < distanceX && distanceZ < distanceY) {
-        camera.moveBackward = false;
-      } else if (movementDirection.z < 0 && distanceZ < distanceX && distanceZ < distanceY) {
-        camera.moveForward = false;
-      }
-      // Camera is encroaching the wall, prevent movement further
-      return;
-    }
-
-    // Update the closest distance for each axis
-    closestDistanceX = Math.min(closestDistanceX, distanceX);
-    closestDistanceY = Math.min(closestDistanceY, distanceY);
-    closestDistanceZ = Math.min(closestDistanceZ, distanceZ);
-
-    if (distanceX < closestDistanceX || distanceY < closestDistanceY || distanceZ < closestDistanceZ) {
-      closestWall = wall;
-      closestDistanceX = distanceX;
-      closestDistanceY = distanceY;
-      closestDistanceZ = distanceZ;
-    }
-    // Handle mouse movements for camera look
-    const mouseMovementX = camera.rotation.x; /* get mouse movement in X direction */
-    const mouseMovementY = camera.rotation.y;/* get mouse movement in Y direction */
-    const mouseMovementZ = camera.rotation.z;/* get mouse movement in Y direction */
-
-    // Adjust camera rotation based on mouse movements
-    camera.rotation.z -= mouseMovementZ * 0.02; // Adjust the rotation speed as needed
-    camera.rotation.y -= mouseMovementY * 0.02; // Adjust the rotation speed as needed
-    camera.rotation.x -= mouseMovementX * 0.02; // Adjust the rotation speed as needed
   }
 
   handleKeyDown(event) {
@@ -177,8 +78,8 @@ class GameMap {
         this.moveRight = true;
         break;
       case 'Space': // Spacebar
-        this.protonic = new Protonic(6, 0.5, 0.1, 0xff0000, 'bouncing', 0.25);
-        this.protonic.draw(this.scene);
+        this.protonic = new Protonic(this.canvas, this.scene, this.camera, this.segments, 0.3, 0.5, 0.3, 0xff0000, 'linear', 1.25);
+        this.protonic.draw(this.scene, this.camera);
         break;
     }
   }
@@ -227,9 +128,9 @@ class GameMap {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, 0, 0.1, 1000);
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
-    this.hid = new HumanInterfaceDevice(this.camera, this.renderer.domElement);
+    // this.hid = new HumanInterfaceDevice(this.camera, this.canvas);
     // Set up camera position and controls
-    this.camera.position.set(0, 0, 10);
+    this.camera.position.set(0, 0, 0);
     this.controls = new PointerLockControls(this.camera, this.canvas);
     this.scene.add(this.controls.getObject());
 
@@ -248,43 +149,11 @@ class GameMap {
     };
     document.addEventListener('pointerlockchange', handlePointerLockChange);
 
-    // Create the room geometry
-    const roomWidth = 100;
-    const roomHeight = 100;
-    const roomDepth = 100;
 
-    // Create the walls
-    const wallGeometry = new THREE.BoxGeometry(roomWidth, roomHeight, 0.1);
-    const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const walls = [
-      new THREE.Mesh(wallGeometry, wallMaterial),
-      new THREE.Mesh(wallGeometry, wallMaterial),
-      new THREE.Mesh(wallGeometry, wallMaterial),
-      new THREE.Mesh(wallGeometry, wallMaterial),
-    ];
-
-    walls[0].position.set(0, roomHeight / 2, -roomDepth / 2);
-    walls[1].position.set(0, roomHeight / 2, roomDepth / 2);
-    walls[2].position.set(-roomWidth / 2, roomHeight / 2, 0);
-    walls[3].position.set(roomWidth / 2, roomHeight / 2, 0);
-
-    // Create the floor
-    const floorGeometry = new THREE.BoxGeometry(roomWidth, 0.1, roomDepth);
-    const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.position.set(0, -roomHeight / 2, 0);
-
-    // Create the ceiling
-    const ceilingGeometry = new THREE.BoxGeometry(roomWidth, 0.1, roomDepth);
-    const ceilingMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    ceiling.position.set(0, roomHeight, 0);
-
-    // Add the walls, floor, and ceiling to the scene
-    walls.forEach(wall => this.scene.add(wall));
-    this.scene.add(floor);
-    this.scene.add(ceiling);
-
+    this.pillars = new Column(0, 10, 0xffffff, [0, 1, 1, 0, 0], 2, 0.5);
+    this.pillars.forEach(element => {
+      this.scene.add(element);
+    });
     // Set up renderer
     this.renderer.setSize(this.canvas.width, this.canvas.height);
 
@@ -293,7 +162,7 @@ class GameMap {
     // Render the scene and update it in a loop
     this.animate();
     document.addEventListener('mousemove', (event) => {
-      const mouseSpeed = 0.00002;
+      const mouseSpeed = 0.002;
       this.cameraRotationY -= event.movementY * mouseSpeed;
       this.cameraRotationX -= event.movementX * mouseSpeed;
       this.cameraRotationZ -= event.movementZ * mouseSpeed;
@@ -305,35 +174,16 @@ class GameMap {
   // Create Segments with Segment.js
 
   animate() {
-    // Get the current position of the player
-    // Assuming character is a global object or it's defined in this class
-    // const playerPosition = this.character.position;
-
-    const moveSpeed = 0.1;
-
-    // Use the controls instance from the HumanInterfaceDevice class
-    if (this.hid.moveForward) {
-      this.hid.controls.moveForward(moveSpeed);
-    }
-    if (this.hid.moveBackward) {
-      this.hid.controls.moveForward(-moveSpeed);
-    }
-    if (this.hid.moveLeft) {
-      this.hid.controls.moveRight(-moveSpeed);
-    }
-    if (this.hid.moveRight) {
-      this.hid.controls.moveRight(moveSpeed);
-    }
-
-
     this.camera.rotateX(this.cameraRotationX);
     this.camera.rotateY(this.cameraRotationY);
     this.camera.rotateZ(this.cameraRotationZ);
-    this.protonic.setTransformedPosition(this.camera.position.x, this.camera.position.y, this.camera.position.z);
-    this.checkCollision(this.camera);
+    // this.protonic.setTransformedPosition(this.cameraRotationX, this.cameraRotationY, this.cameraRotationZ);
+
     const delta = this.hid.clock.getDelta();
     this.hid.update(delta);
-    this.segmentObject.draw(this.scene);
+    this.segments.forEach(f => this.scene.add(f));
+    
+    new collisionChecker(this.scene, this.camera, this.segments, this.hid);
     requestAnimationFrame(this.animate.bind(this));
     this.renderer.render(this.scene, this.camera);
   }
